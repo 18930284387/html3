@@ -30,6 +30,7 @@ let getReelItem = () => {
 
 let startSpin = () => {
   if (!spinning && money > 0) {
+    spinning = true;
     document.querySelectorAll(".prize-item.active").forEach(s => {
       s.classList.remove("active");
     });
@@ -43,7 +44,6 @@ let startSpin = () => {
       spinningReels.push(2);
     }, reelDelay * 2);
 
-    spinning = true;
     spinUpdate(7);
   }
 };
@@ -66,6 +66,8 @@ let spinUpdate = spinsLeft => {
       playNote(160 - (30 - spinningReels.length * 10), 0.1);
     } else {
       spinning = false;
+      let spinBtn = document.getElementById("spin-button");
+      if (spinBtn) spinBtn.disabled = money <= 0;
       findWins();
     }
   }
@@ -85,6 +87,10 @@ let moveReel = reelIndex => {
 let updateMoney = change => {
   money += change;
   document.querySelector("#money").innerText = money;
+  let spinBtn = document.getElementById("spin-button");
+  if (spinBtn) {
+    spinBtn.disabled = spinning || money <= 0;
+  }
 };
 
 let setChange = change => {

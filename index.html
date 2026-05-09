@@ -11,7 +11,7 @@
 <!-- Please like <3 and share if you enjoyed! -->
 
 
-<div class="container" onclick="startSpin()">
+<div class="container">
   <h1 class="title"> Smiley Sl😱ts </h1>
   <div class="money-container">
     <div id="money">100</div>
@@ -24,9 +24,31 @@
     <div class="reel-container"></div>
   </div>
 
+  <button id="spin-button" onclick="startSpin()" style="margin: 20px auto; display: block; font-size: 24px; padding: 15px 40px; background: linear-gradient(145deg, #ffd700, #ffaa00); border: 2px solid #e69500; border-radius: 50px; cursor: pointer; font-weight: bold; color: #fff; text-shadow: 1px 1px 2px rgba(0,0,0,0.5); box-shadow: 0 6px 0 #cc8400, 0 10px 15px rgba(0,0,0,0.3); transition: all 0.1s ease; text-transform: uppercase; letter-spacing: 2px;">🎰 Spin! 🎰</button>
+
+  <style>
+    #spin-button:active {
+      transform: translateY(6px);
+      box-shadow: 0 0px 0 #cc8400, 0 2px 5px rgba(0,0,0,0.3) !important;
+    }
+    #spin-button:disabled {
+      background: #ccc;
+      border-color: #aaa;
+      color: #888;
+      box-shadow: 0 6px 0 #999, 0 10px 15px rgba(0,0,0,0.2);
+      cursor: not-allowed;
+      text-shadow: none;
+      transform: none;
+    }
+    #spin-button:disabled:active {
+      transform: none;
+      box-shadow: 0 6px 0 #999, 0 10px 15px rgba(0,0,0,0.2) !important;
+    }
+  </style>
+
   <div class="info">
     <div class="instructions">
-      Press anywhere to spin the reels.<br/> Each spin costs 1 💰<br/> Match at least two on the middle row to win!<br/> See prizes below.</div>
+      Press the SPIN button to spin the reels.<br/> Each spin costs 1 💰<br/> Match at least two on the middle row to win!<br/> See prizes below.</div>
 
     <div class="prize-table">
       <div class="doubles">
