@@ -1,0 +1,669 @@
+diff --git a/index.html b/index.html
+index 4fed2db..c114629 100755
+--- a/index.html
++++ b/index.html
+@@ -4,13 +4,218 @@
+   <meta charset="utf-8">
+   <meta name="viewport" content="width=device-width,initial-scale=1">
+   <title>Smiley Slots</title>
+-  <link rel="stylesheet" href="style.css">
++  <style>
++    body {
++      margin: 0;
++      padding: 20px 0;
++      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
++      background: #1a1a2e;
++      color: white;
++      display: flex;
++      justify-content: center;
++      align-items: center;
++      min-height: 100vh;
++      user-select: none;
++      box-sizing: border-box;
++    }
+ 
++    .container {
++      display: flex;
++      flex-direction: column;
++      align-items: center;
++      cursor: pointer;
++      background: #16213e;
++      padding: 2rem;
++      border-radius: 20px;
++      box-shadow: 0 10px 30px rgba(0,0,0,0.8);
++      max-width: 800px;
++      width: 90%;
++      box-sizing: border-box;
++    }
++
++    .title {
++      margin-top: 0;
++      font-size: 3rem;
++      text-shadow: 0 0 10px #e94560;
++      color: #e94560;
++      text-align: center;
++    }
++
++    .money-container {
++      display: flex;
++      align-items: center;
++      font-size: 2.5rem;
++      margin-bottom: 30px;
++      background: #0f3460;
++      padding: 10px 40px;
++      border-radius: 40px;
++      box-shadow: inset 0 5px 10px rgba(0,0,0,0.5);
++      position: relative;
++      font-weight: bold;
++    }
++
++    #money::before {
++      content: '💰 ';
++    }
++
++    .changes {
++      position: absolute;
++      right: -60px;
++      top: 0;
++      display: flex;
++      flex-direction: column;
++      pointer-events: none;
++    }
++
++    .change {
++      color: #4cd137;
++      font-weight: bold;
++      font-size: 1.5rem;
++      animation: floatUp 1s ease-out forwards;
++      text-shadow: 1px 1px 2px black;
++    }
++
++    .change.negative {
++      color: #e84118;
++    }
++
++    @keyframes floatUp {
++      0% { opacity: 1; transform: translateY(0); }
++      100% { opacity: 0; transform: translateY(-50px); }
++    }
++
++    .play-area {
++      display: flex;
++      gap: 20px;
++      background: #111;
++      padding: 20px;
++      border-radius: 15px;
++      border: 5px solid #e94560;
++      box-shadow: 0 0 20px #e94560, inset 0 0 30px black;
++      position: relative;
++    }
++
++    .play-area::after {
++      content: '';
++      position: absolute;
++      top: 50%;
++      left: 10px;
++      right: 10px;
++      height: 90px;
++      transform: translateY(-50%);
++      border: 3px solid rgba(233, 69, 96, 0.8);
++      border-radius: 10px;
++      background: rgba(233, 69, 96, 0.15);
++      pointer-events: none;
++      box-shadow: 0 0 10px rgba(233, 69, 96, 0.5);
++    }
++
++    .reel-container {
++      width: 90px;
++      height: 270px; /* 3 items of 90px */
++      background: #f1f2f6;
++      border-radius: 10px;
++      overflow: hidden;
++      display: flex;
++      flex-direction: column;
++      position: relative;
++      box-shadow: inset 0 0 20px rgba(0,0,0,0.9);
++    }
++
++    .reel-item {
++      width: 90px;
++      height: 90px;
++      min-height: 90px;
++      display: flex;
++      justify-content: center;
++      align-items: center;
++      font-size: 55px;
++      margin-top: -90px;
++      transition: margin-top 0.1s linear;
++    }
++
++    .reel-item.active {
++      margin-top: 0;
++    }
++
++    .reel-item.win {
++      animation: winPulse 0.5s infinite alternate;
++      background: #ffd32a;
++      border-radius: 10px;
++      z-index: 2;
++      position: relative;
++    }
++
++    @keyframes winPulse {
++      0% { transform: scale(1); box-shadow: 0 0 10px #ff9f43; }
++      100% { transform: scale(1.1); box-shadow: 0 0 20px #ff9f43; }
++    }
++
++    .info {
++      margin-top: 30px;
++      text-align: center;
++      width: 100%;
++    }
++
++    .instructions {
++      font-size: 1.2rem;
++      margin-bottom: 25px;
++      color: #a4b0be;
++      line-height: 1.6;
++    }
++
++    .prize-table {
++      display: flex;
++      justify-content: space-around;
++      background: #0f3460;
++      padding: 20px;
++      border-radius: 15px;
++      width: 100%;
++      box-sizing: border-box;
++      gap: 10px;
++    }
++
++    .doubles, .triples {
++      display: flex;
++      flex-direction: column;
++      gap: 8px;
++      align-items: center;
++      flex: 1;
++    }
++
++    .prize-item {
++      font-size: 1.2rem;
++      background: rgba(0,0,0,0.3);
++      padding: 8px 15px;
++      border-radius: 8px;
++      transition: all 0.3s ease;
++      color: #dfe4ea;
++      white-space: nowrap;
++    }
++
++    .prize-item.active {
++      background: #e94560;
++      color: white;
++      font-weight: bold;
++      transform: scale(1.1);
++      box-shadow: 0 0 15px #e94560;
++    }
++
++    @media (max-width: 600px) {
++      .play-area { gap: 10px; }
++      .reel-container { width: 70px; height: 210px; }
++      .reel-item { width: 70px; height: 70px; min-height: 70px; font-size: 45px; margin-top: -70px; }
++      .play-area::after { height: 70px; }
++      .title { font-size: 2rem; }
++      .money-container { font-size: 1.8rem; }
++      .prize-item { font-size: 1rem; padding: 5px 10px; }
++      .prize-table { flex-direction: column; align-items: center; }
++    }
++  </style>
+ </head>
+ <body>
+ <!-- Please like <3 and share if you enjoyed! -->
+ 
+-
+ <div class="container" onclick="startSpin()">
+   <h1 class="title"> Smiley Sl😱ts </h1>
+   <div class="money-container">
+@@ -32,9 +237,222 @@
+       <div class="doubles">
+       </div>
+       <div class="triples">
+-
+       </div>
+     </div>
+-  <script src="script.js"></script>
++  </div>
++</div>
++
++<script>
++// Please like <3 and share if you enjoyed!
++
++let reelContents = ["😂", "😍", "😅", "🤔", "😜", "🤐", "😱", "😵"];
++let reelLength = 3;
++let reelContainers = document.querySelectorAll(".reel-container");
++let spinningReels = [];
++let spinning = false;
++let reelDelay = 100;
++
++let money = 100;
++let moneyToAdd = 0;
++
++let audioCtx = new (window.AudioContext || window.webkitAudioContext)();
++
++let masterVolume = audioCtx.createGain();
++masterVolume.gain.setValueAtTime(0.05, audioCtx.currentTime);
++masterVolume.connect(audioCtx.destination);
++
++let getReelItem = () => {
++  let newReel = document.createElement("div");
++  newReel.innerHTML =
++    reelContents[Math.floor(Math.random() * reelContents.length)];
++  newReel.classList.add("reel-item");
++  setTimeout(() => {
++    newReel.classList.add("active");
++  }, 0);
++
++  return newReel;
++};
++
++let startSpin = () => {
++  if (!spinning && money > 0) {
++    document.querySelectorAll(".prize-item.active").forEach(s => {
++      s.classList.remove("active");
++    });
++    updateMoney(-1);
++    setChange(-1);
++    spinningReels.push(0);
++    setTimeout(() => {
++      spinningReels.push(1);
++    }, reelDelay);
++    setTimeout(() => {
++      spinningReels.push(2);
++    }, reelDelay * 2);
++
++    spinning = true;
++    spinUpdate(7);
++  }
++};
++
++let spinUpdate = spinsLeft => {
++  spinningReels.forEach(n => {
++    moveReel(n);
++  });
++  if (spinsLeft > 0) {
++    setTimeout(() => {
++      spinUpdate(spinsLeft - 1);
++    }, reelDelay);
++  } else {
++    if (spinningReels.length > 0) {
++      spinningReels.shift();
++
++      setTimeout(() => {
++        spinUpdate(0);
++      }, reelDelay);
++      playNote(160 - (30 - spinningReels.length * 10), 0.1);
++    } else {
++      spinning = false;
++      findWins();
++    }
++  }
++};
++
++let moveReel = reelIndex => {
++  let selectedReel = reelContainers[reelIndex];
++  selectedReel.prepend(getReelItem());
++  if (selectedReel.children.length > reelLength) {
++    selectedReel.lastElementChild.classList.add("deactivate");
++    setTimeout(() => {
++      selectedReel.removeChild(selectedReel.lastElementChild);
++    }, reelDelay);
++  }
++};
++
++let updateMoney = change => {
++  money += change;
++  document.querySelector("#money").innerText = money;
++};
++
++let setChange = change => {
++  let changes = document.querySelector(".changes");
++  let newChange = document.createElement("div");
++  newChange.innerHTML = change > 0 ? `+${change}` : change;
++  newChange.classList.add("change");
++  if (change < 0) newChange.classList.add("negative");
++  changes.prepend(newChange);
++  if (changes.children.length > 6) {
++    changes.removeChild(changes.lastElementChild);
++  }
++};
++
++let playWinChime = amount => {
++  let clampedAm = amount > 20 ? 20 : amount;
++  playNote(400 + 100 * (20 - clampedAm), 0.05, "sine");
++  if (--amount > 0)
++    setTimeout(() => {
++      playWinChime(amount);
++    }, 70);
++};
++
++let findWins = () => {
++  let winline = [];
++  let symbols = {};
++  reelContainers.forEach(reel => {
++    let symbol = reel.children[1].innerText;
++    winline.push(symbol);
++    if (symbols[symbol]) symbols[symbol]++;
++    else symbols[symbol] = 1;
++  });
++
++  if (
++    winline.filter(s => {
++      return s === winline[0];
++    }).length === 3
++  ) {
++    win(3, winline[0]);
++    document
++      .querySelector(".triples")
++      .children[reelContents.indexOf(winline[0])].classList.add("active");
++  } else {
++    for (s in symbols) {
++      if (symbols[s] == 2) {
++        win(2, s);
++        document
++          .querySelector(".doubles")
++          .children[reelContents.indexOf(s)].classList.add("active");
++      }
++    }
++  }
++};
++
++let win = (amountMatching, symbol) => {
++  reelContainers.forEach(reel => {
++    if (reel.children[1].innerText === symbol)
++      reel.children[1].classList.add("win");
++  });
++  let winAmount = 1 + reelContents.indexOf(symbol);
++  playWinChime(winAmount);
++  if (amountMatching == 3) winAmount *= 100;
++
++  setChange(winAmount);
++  addToMoney(winAmount);
++};
++
++let addToMoney = (amount, speed) => {
++  let changeAmount = Math.ceil(amount / 2);
++  updateMoney(changeAmount);
++  let remainder = amount - changeAmount;
++  if (!speed) speed = 101;
++  speed -= 5;
++  if (speed < 10) speed = 10;
++  if (remainder)
++    setTimeout(() => {
++      addToMoney(remainder);
++    }, speed);
++};
++
++function playNote(freq, dur, type) {
++  if (!freq) freq = 1000;
++  if (!dur) dur = 1;
++  if (!type) type = "square";
++  return new Promise(res => {
++    let oscillator = audioCtx.createOscillator();
++    oscillator.type = type;
++    oscillator.frequency.setValueAtTime(freq, audioCtx.currentTime); // value in hertz
++    oscillator.connect(masterVolume);
++    oscillator.start();
++    oscillator.stop(audioCtx.currentTime + dur);
++    oscillator.onended = res;
++  });
++}
++
++//fills reels
++reelContainers.forEach((reel, i) => {
++  for (let n = 0; n < reelLength; n++) {
++    moveReel(i);
++  }
++});
++
++let addToPrizeTable = (combo, amount, target) => {
++  let pt = document.querySelector(`.prize-table .${target}`);
++  let prize = document.createElement("div");
++  prize.innerHTML = `${combo}: ${amount}`;
++  prize.classList.add("prize-item");
++  prize.setAttribute("win-attr", combo.replace(/[-❔]/g, ""));
++  pt.append(prize);
++};
++
++//fill prize table
++reelContents.forEach((symbol, index) => {
++  addToPrizeTable(`${symbol}-${symbol}-❔`, index + 1, "doubles");
++});
++
++reelContents.forEach((symbol, index) => {
++  addToPrizeTable(
++    `${symbol}-${symbol}-${symbol}`,
++    (index + 1) * 100,
++    "triples"
++  );
++});
++</script>
+ </body>
+-</html>
+\ No newline at end of file
++</html>
+diff --git a/script.js b/script.js
+deleted file mode 100755
+index 1686d03..0000000
+--- a/script.js
++++ /dev/null
+@@ -1,210 +0,0 @@
+-// Please like <3 and share if you enjoyed!
+-
+-let reelContents = ["😂", "😍", "😅", "🤔", "😜", "🤐", "😱", "😵"];
+-let reelLength = 3;
+-let reelContainers = document.querySelectorAll(".reel-container");
+-let spinningReels = [];
+-let spinning = false;
+-let reelDelay = 100;
+-
+-let money = 100;
+-let moneyToAdd = 0;
+-
+-let audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+-
+-let masterVolume = audioCtx.createGain();
+-masterVolume.gain.setValueAtTime(0.05, audioCtx.currentTime);
+-masterVolume.connect(audioCtx.destination);
+-
+-let getReelItem = () => {
+-  let newReel = document.createElement("div");
+-  newReel.innerHTML =
+-    reelContents[Math.floor(Math.random() * reelContents.length)];
+-  newReel.classList.add("reel-item");
+-  setTimeout(() => {
+-    newReel.classList.add("active");
+-  }, 0);
+-
+-  return newReel;
+-};
+-
+-let startSpin = () => {
+-  if (!spinning && money > 0) {
+-    document.querySelectorAll(".prize-item.active").forEach(s => {
+-      s.classList.remove("active");
+-    });
+-    updateMoney(-1);
+-    setChange(-1);
+-    spinningReels.push(0);
+-    setTimeout(() => {
+-      spinningReels.push(1);
+-    }, reelDelay);
+-    setTimeout(() => {
+-      spinningReels.push(2);
+-    }, reelDelay * 2);
+-
+-    spinning = true;
+-    spinUpdate(7);
+-  }
+-};
+-
+-let spinUpdate = spinsLeft => {
+-  spinningReels.forEach(n => {
+-    moveReel(n);
+-  });
+-  if (spinsLeft > 0) {
+-    setTimeout(() => {
+-      spinUpdate(spinsLeft - 1);
+-    }, reelDelay);
+-  } else {
+-    if (spinningReels.length > 0) {
+-      spinningReels.shift();
+-
+-      setTimeout(() => {
+-        spinUpdate(0);
+-      }, reelDelay);
+-      playNote(160 - (30 - spinningReels.length * 10), 0.1);
+-    } else {
+-      spinning = false;
+-      findWins();
+-    }
+-  }
+-};
+-
+-let moveReel = reelIndex => {
+-  let selectedReel = reelContainers[reelIndex];
+-  selectedReel.prepend(getReelItem());
+-  if (selectedReel.children.length > reelLength) {
+-    selectedReel.lastElementChild.classList.add("deactivate");
+-    setTimeout(() => {
+-      selectedReel.removeChild(selectedReel.lastElementChild);
+-    }, reelDelay);
+-  }
+-};
+-
+-let updateMoney = change => {
+-  money += change;
+-  document.querySelector("#money").innerText = money;
+-};
+-
+-let setChange = change => {
+-  let changes = document.querySelector(".changes");
+-  let newChange = document.createElement("div");
+-  newChange.innerHTML = change > 0 ? `+${change}` : change;
+-  newChange.classList.add("change");
+-  if (change < 0) newChange.classList.add("negative");
+-  changes.prepend(newChange);
+-  if (changes.children.length > 6) {
+-    changes.removeChild(changes.lastElementChild);
+-  }
+-};
+-
+-let playWinChime = amount => {
+-  let clampedAm = amount > 20 ? 20 : amount;
+-  playNote(400 + 100 * (20 - clampedAm), 0.05, "sine");
+-  if (--amount > 0)
+-    setTimeout(() => {
+-      playWinChime(amount);
+-    }, 70);
+-};
+-
+-let findWins = () => {
+-  let winline = [];
+-  let symbols = {};
+-  reelContainers.forEach(reel => {
+-    let symbol = reel.children[1].innerText;
+-    winline.push(symbol);
+-    if (symbols[symbol]) symbols[symbol]++;
+-    else symbols[symbol] = 1;
+-  });
+-
+-  if (
+-    winline.filter(s => {
+-      return s === winline[0];
+-    }).length === 3
+-  ) {
+-    win(3, winline[0]);
+-    document
+-      .querySelector(".triples")
+-      .children[reelContents.indexOf(winline[0])].classList.add("active");
+-  } else {
+-    for (s in symbols) {
+-      if (symbols[s] == 2) {
+-        win(2, s);
+-        document
+-          .querySelector(".doubles")
+-          .children[reelContents.indexOf(s)].classList.add("active");
+-      }
+-    }
+-  }
+-};
+-
+-let win = (amountMatching, symbol) => {
+-  reelContainers.forEach(reel => {
+-    if (reel.children[1].innerText === symbol)
+-      reel.children[1].classList.add("win");
+-  });
+-  let winAmount = 1 + reelContents.indexOf(symbol);
+-  playWinChime(winAmount);
+-  if (amountMatching == 3) winAmount *= 100;
+-
+-  setChange(winAmount);
+-  addToMoney(winAmount);
+-};
+-
+-let addToMoney = (amount, speed) => {
+-  let changeAmount = Math.ceil(amount / 2);
+-  updateMoney(changeAmount);
+-  let remainder = amount - changeAmount;
+-  if (!speed) speed = 101;
+-  speed -= 5;
+-  if (speed < 10) speed = 10;
+-  if (remainder)
+-    setTimeout(() => {
+-      addToMoney(remainder);
+-    }, speed);
+-};
+-
+-function playNote(freq, dur, type) {
+-  if (!freq) freq = 1000;
+-  if (!dur) dur = 1;
+-  if (!type) type = "square";
+-  return new Promise(res => {
+-    let oscillator = audioCtx.createOscillator();
+-    oscillator.type = type;
+-    oscillator.frequency.setValueAtTime(freq, audioCtx.currentTime); // value in hertz
+-    oscillator.connect(masterVolume);
+-    oscillator.start();
+-    oscillator.stop(audioCtx.currentTime + dur);
+-    oscillator.onended = res;
+-  });
+-}
+-
+-//fills reels
+-reelContainers.forEach((reel, i) => {
+-  for (let n = 0; n < reelLength; n++) {
+-    moveReel(i);
+-  }
+-});
+-
+-let addToPrizeTable = (combo, amount, target) => {
+-  let pt = document.querySelector(`.prize-table .${target}`);
+-  let prize = document.createElement("div");
+-  prize.innerHTML = `${combo}: ${amount}`;
+-  prize.classList.add("prize-item");
+-  prize.setAttribute("win-attr", combo.replace(/[-❔]/g, ""));
+-  pt.append(prize);
+-};
+-
+-//fill prize table
+-reelContents.forEach((symbol, index) => {
+-  addToPrizeTable(`${symbol}-${symbol}-❔`, index + 1, "doubles");
+-});
+-
+-reelContents.forEach((symbol, index) => {
+-  addToPrizeTable(
+-    `${symbol}-${symbol}-${symbol}`,
+-    (index + 1) * 100,
+-    "triples"
+-  );
+-});
+\ No newline at end of file
