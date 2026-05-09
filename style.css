@@ -1,0 +1,231 @@
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  background: #1a1a2e;
+  color: #fff;
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 100vh;
+  overflow: hidden;
+}
+
+.container {
+  text-align: center;
+  padding: 30px;
+  max-width: 500px;
+  width: 100%;
+}
+
+.title {
+  font-size: 2.5rem;
+  margin-bottom: 20px;
+  text-shadow: 0 0 20px rgba(255, 215, 0, 0.6);
+  letter-spacing: 2px;
+}
+
+.money-container {
+  position: relative;
+  display: inline-block;
+  margin-bottom: 25px;
+}
+
+#money {
+  font-size: 2rem;
+  font-weight: bold;
+  color: #ffd700;
+  text-shadow: 0 0 10px rgba(255, 215, 0, 0.4);
+}
+
+#money::before {
+  content: '💰 ';
+}
+
+.changes {
+  position: absolute;
+  top: 0;
+  right: -40px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.change {
+  font-size: 0.9rem;
+  font-weight: bold;
+  color: #4caf50;
+  animation: fadeUp 1s ease-out forwards;
+}
+
+.change.negative {
+  color: #f44336;
+}
+
+@keyframes fadeUp {
+  from {
+    opacity: 1;
+    transform: translateY(0);
+  }
+  to {
+    opacity: 0;
+    transform: translateY(-20px);
+  }
+}
+
+.play-area {
+  display: flex;
+  justify-content: center;
+  gap: 10px;
+  margin-bottom: 25px;
+  background: #16213e;
+  border-radius: 15px;
+  padding: 20px 15px;
+  border: 3px solid #0f3460;
+  box-shadow: inset 0 0 30px rgba(0, 0, 0, 0.5);
+}
+
+.reel-container {
+  width: 80px;
+  height: 180px;
+  overflow: hidden;
+  position: relative;
+  background: #0a0a23;
+  border-radius: 10px;
+  border: 2px solid #1a1a4e;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+
+.reel-item {
+  font-size: 2.5rem;
+  height: 60px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  opacity: 0;
+  transform: translateY(-20px);
+  transition: opacity 0.1s ease, transform 0.1s ease;
+}
+
+.reel-item.active {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.reel-item.deactivate {
+  opacity: 0;
+  transform: translateY(20px);
+}
+
+.reel-item.win {
+  animation: winPulse 0.5s ease-in-out 3;
+  background: rgba(255, 215, 0, 0.2);
+  border-radius: 8px;
+}
+
+@keyframes winPulse {
+  0%, 100% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.2);
+  }
+}
+
+.spin-btn {
+  display: block;
+  margin: 0 auto 25px;
+  padding: 15px 60px;
+  font-size: 1.5rem;
+  font-weight: bold;
+  letter-spacing: 3px;
+  color: #fff;
+  background: linear-gradient(135deg, #e91e63, #ff5722);
+  border: none;
+  border-radius: 50px;
+  cursor: pointer;
+  box-shadow: 0 6px 20px rgba(233, 30, 99, 0.5), 0 0 40px rgba(255, 87, 34, 0.2);
+  transition: all 0.2s ease;
+  text-transform: uppercase;
+  position: relative;
+  overflow: hidden;
+}
+
+.spin-btn::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+  transition: left 0.5s ease;
+}
+
+.spin-btn:hover:not(:disabled)::before {
+  left: 100%;
+}
+
+.spin-btn:hover:not(:disabled) {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 25px rgba(233, 30, 99, 0.6), 0 0 50px rgba(255, 87, 34, 0.3);
+}
+
+.spin-btn:active:not(:disabled) {
+  transform: translateY(1px);
+  box-shadow: 0 3px 10px rgba(233, 30, 99, 0.4);
+}
+
+.spin-btn:disabled {
+  background: linear-gradient(135deg, #555, #444);
+  cursor: not-allowed;
+  box-shadow: none;
+  opacity: 0.7;
+}
+
+.info {
+  text-align: center;
+}
+
+.instructions {
+  font-size: 0.85rem;
+  color: #aaa;
+  margin-bottom: 15px;
+  line-height: 1.6;
+}
+
+.prize-table {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.doubles,
+.triples {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 5px;
+}
+
+.prize-item {
+  font-size: 0.8rem;
+  padding: 4px 8px;
+  background: #16213e;
+  border-radius: 5px;
+  border: 1px solid #0f3460;
+  transition: all 0.3s ease;
+}
+
+.prize-item.active {
+  background: rgba(255, 215, 0, 0.2);
+  border-color: #ffd700;
+  color: #ffd700;
+  box-shadow: 0 0 10px rgba(255, 215, 0, 0.3);
+}

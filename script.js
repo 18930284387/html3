@@ -3,12 +3,17 @@
 let reelContents = ["😂", "😍", "😅", "🤔", "😜", "🤐", "😱", "😵"];
 let reelLength = 3;
 let reelContainers = document.querySelectorAll(".reel-container");
+let spinBtn = document.querySelector("#spin-btn");
 let spinningReels = [];
 let spinning = false;
 let reelDelay = 100;
 
 let money = 100;
 let moneyToAdd = 0;
+
+spinBtn.addEventListener("click", () => {
+  startSpin();
+});
 
 let audioCtx = new (window.AudioContext || window.webkitAudioContext)();
 
@@ -30,6 +35,7 @@ let getReelItem = () => {
 
 let startSpin = () => {
   if (!spinning && money > 0) {
+    spinBtn.disabled = true;
     document.querySelectorAll(".prize-item.active").forEach(s => {
       s.classList.remove("active");
     });
@@ -66,6 +72,7 @@ let spinUpdate = spinsLeft => {
       playNote(160 - (30 - spinningReels.length * 10), 0.1);
     } else {
       spinning = false;
+      spinBtn.disabled = false;
       findWins();
     }
   }
