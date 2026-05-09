@@ -5,13 +5,52 @@
   <meta name="viewport" content="width=device-width,initial-scale=1">
   <title>Smiley Slots</title>
   <link rel="stylesheet" href="style.css">
+  <style>
+    .spin-btn {
+      display: block;
+      margin: 20px auto;
+      padding: 15px 50px;
+      font-size: 24px;
+      font-weight: bold;
+      color: #fff;
+      background: linear-gradient(180deg, #ff6b6b 0%, #ee5a5a 100%);
+      border: none;
+      border-radius: 12px;
+      cursor: pointer;
+      box-shadow: 0 6px 0 #c44, 0 8px 15px rgba(0,0,0,0.3);
+      transition: transform 0.1s, box-shadow 0.1s;
+      text-transform: uppercase;
+      letter-spacing: 2px;
+    }
+    .spin-btn:hover:not(:disabled) {
+      transform: translateY(-2px);
+      box-shadow: 0 8px 0 #c44, 0 10px 20px rgba(0,0,0,0.35);
+    }
+    .spin-btn:active:not(:disabled) {
+      transform: translateY(4px);
+      box-shadow: 0 2px 0 #c44, 0 4px 10px rgba(0,0,0,0.25);
+    }
+    .spin-btn:disabled {
+      background: linear-gradient(180deg, #aaa 0%, #888 100%);
+      box-shadow: 0 4px 0 #666, 0 6px 10px rgba(0,0,0,0.2);
+      cursor: not-allowed;
+      opacity: 0.8;
+    }
+    .spin-btn.spinning {
+      animation: pulse 0.5s ease-in-out infinite;
+    }
+    @keyframes pulse {
+      0%, 100% { transform: scale(1); }
+      50% { transform: scale(1.05); }
+    }
+  </style>
 
 </head>
 <body>
 <!-- Please like <3 and share if you enjoyed! -->
 
 
-<div class="container" onclick="startSpin()">
+<div class="container">
   <h1 class="title"> Smiley Sl😱ts </h1>
   <div class="money-container">
     <div id="money">100</div>
@@ -24,9 +63,11 @@
     <div class="reel-container"></div>
   </div>
 
+  <button id="spin-btn" class="spin-btn">🎰 SPIN</button>
+
   <div class="info">
     <div class="instructions">
-      Press anywhere to spin the reels.<br/> Each spin costs 1 💰<br/> Match at least two on the middle row to win!<br/> See prizes below.</div>
+      Click the SPIN button to start.<br/> Each spin costs 1 💰<br/> Match at least two on the middle row to win!<br/> See prizes below.</div>
 
     <div class="prize-table">
       <div class="doubles">
