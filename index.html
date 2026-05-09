@@ -5,17 +5,61 @@
   <meta name="viewport" content="width=device-width,initial-scale=1">
   <title>Smiley Slots</title>
   <link rel="stylesheet" href="style.css">
+  <style>
+    .controls {
+      display: flex;
+      justify-content: center;
+      margin: 1rem 0 1.5rem;
+    }
 
+    .spin-button {
+      appearance: none;
+      border: 0;
+      border-radius: 999px;
+      padding: 0.9rem 2.8rem;
+      font: inherit;
+      font-size: 1.1rem;
+      font-weight: 700;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: #fff;
+      background: linear-gradient(135deg, #ff7a18, #ff3d81);
+      box-shadow: 0 0.8rem 1.8rem rgba(255, 61, 129, 0.35);
+      cursor: pointer;
+      transition: transform 0.18s ease, box-shadow 0.18s ease, opacity 0.18s ease;
+    }
+
+    .spin-button:hover:not(:disabled),
+    .spin-button:focus-visible:not(:disabled) {
+      transform: translateY(-2px) scale(1.02);
+      box-shadow: 0 1rem 2.2rem rgba(255, 61, 129, 0.45);
+      outline: none;
+    }
+
+    .spin-button:active:not(:disabled),
+    .spin-button.is-spinning {
+      transform: scale(0.98);
+    }
+
+    .spin-button:disabled {
+      opacity: 0.65;
+      cursor: not-allowed;
+      box-shadow: none;
+    }
+  </style>
 </head>
 <body>
 <!-- Please like <3 and share if you enjoyed! -->
 
-
-<div class="container" onclick="startSpin()">
+<div class="container">
   <h1 class="title"> Smiley Sl😱ts </h1>
   <div class="money-container">
     <div id="money">100</div>
     <div class="changes"> </div>
+  </div>
+
+  <div class="controls">
+    <button id="spin-button" class="spin-button" type="button" aria-label="Spin the reels">Spin</button>
   </div>
 
   <div class="play-area">
@@ -26,7 +70,8 @@
 
   <div class="info">
     <div class="instructions">
-      Press anywhere to spin the reels.<br/> Each spin costs 1 💰<br/> Match at least two on the middle row to win!<br/> See prizes below.</div>
+      Press the Spin button to spin the reels.<br/> Each spin costs 1 💰<br/> Match at least two on the middle row to win!<br/> See prizes below.
+    </div>
 
     <div class="prize-table">
       <div class="doubles">
@@ -35,6 +80,7 @@
 
       </div>
     </div>
+  </div>
   <script src="script.js"></script>
 </body>
 </html>

@@ -3,6 +3,7 @@
 let reelContents = ["😂", "😍", "😅", "🤔", "😜", "🤐", "😱", "😵"];
 let reelLength = 3;
 let reelContainers = document.querySelectorAll(".reel-container");
+let spinButton = document.querySelector("#spin-button");
 let spinningReels = [];
 let spinning = false;
 let reelDelay = 100;
@@ -10,11 +11,26 @@ let reelDelay = 100;
 let money = 100;
 let moneyToAdd = 0;
 
-let audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+let AudioContextClass = window.AudioContext || window["webkitAudioContext"];
+let audioCtx = new AudioContextClass();
 
 let masterVolume = audioCtx.createGain();
 masterVolume.gain.setValueAtTime(0.05, audioCtx.currentTime);
 masterVolume.connect(audioCtx.destination);
+
+let updateSpinButton = () => {
+  if (!spinButton) return;
+
+  spinButton.disabled = spinning || money <= 0;
+  spinButton.classList.toggle("is-spinning", spinning);
+
+  if (money <= 0) {
+    spinButton.innerText = "No Coins";
+    return;
+  }
+
+  spinButton.innerText = spinning ? "Spinning..." : "Spin";
+};
 
 let getReelItem = () => {
   let newReel = document.createElement("div");
@@ -28,7 +44,11 @@ let getReelItem = () => {
   return newReel;
 };
 
-let startSpin = () => {
+let startSpin = async () => {
+  if (audioCtx.state === "suspended") {
+    await audioCtx.resume();
+  }
+
   if (!spinning && money > 0) {
     document.querySelectorAll(".prize-item.active").forEach(s => {
       s.classList.remove("active");
@@ -44,6 +64,7 @@ let startSpin = () => {
     }, reelDelay * 2);
 
     spinning = true;
+    updateSpinButton();
     spinUpdate(7);
   }
 };
@@ -66,6 +87,7 @@ let spinUpdate = spinsLeft => {
       playNote(160 - (30 - spinningReels.length * 10), 0.1);
     } else {
       spinning = false;
+      updateSpinButton();
       findWins();
     }
   }
@@ -85,6 +107,7 @@ let moveReel = reelIndex => {
 let updateMoney = change => {
   money += change;
   document.querySelector("#money").innerText = money;
+  updateSpinButton();
 };
 
 let setChange = change => {
@@ -128,7 +151,7 @@ let findWins = () => {
       .querySelector(".triples")
       .children[reelContents.indexOf(winline[0])].classList.add("active");
   } else {
-    for (s in symbols) {
+    for (let s in symbols) {
       if (symbols[s] == 2) {
         win(2, s);
         document
@@ -172,7 +195,7 @@ function playNote(freq, dur, type) {
   return new Promise(res => {
     let oscillator = audioCtx.createOscillator();
     oscillator.type = type;
-    oscillator.frequency.setValueAtTime(freq, audioCtx.currentTime); // value in hertz
+    oscillator.frequency.setValueAtTime(freq, audioCtx.currentTime);
     oscillator.connect(masterVolume);
     oscillator.start();
     oscillator.stop(audioCtx.currentTime + dur);
@@ -180,8 +203,10 @@ function playNote(freq, dur, type) {
   });
 }
 
+spinButton?.addEventListener("click", startSpin);
+
 //fills reels
-reelContainers.forEach((reel, i) => {
+reelContainers.forEach((_, i) => {
   for (let n = 0; n < reelLength; n++) {
     moveReel(i);
   }
@@ -208,3 +233,5 @@ reelContents.forEach((symbol, index) => {
     "triples"
   );
 });
+
+updateSpinButton();
