@@ -1,0 +1,173 @@
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+  min-height: 100vh;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  color: white;
+}
+
+.container {
+  text-align: center;
+  padding: 20px;
+  cursor: pointer;
+  user-select: none;
+}
+
+.title {
+  font-size: 3rem;
+  margin-bottom: 20px;
+  text-shadow: 0 0 20px rgba(255, 107, 107, 0.8);
+  animation: pulse 2s infinite;
+}
+
+@keyframes pulse {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.02); }
+}
+
+.money-container {
+  margin-bottom: 20px;
+}
+
+#money {
+  font-size: 3rem;
+  font-weight: bold;
+  color: #ffd700;
+  text-shadow: 0 0 10px rgba(255, 215, 0, 0.5);
+}
+
+.changes {
+  height: 30px;
+  position: relative;
+}
+
+.change {
+  font-size: 1.5rem;
+  font-weight: bold;
+  position: absolute;
+  left: 50%;
+  transform: translateX(-50%);
+  animation: fadeUp 1s forwards;
+  color: #4ade80;
+}
+
+.change.negative {
+  color: #f87171;
+}
+
+@keyframes fadeUp {
+  0% { opacity: 1; transform: translateX(-50%) translateY(0); }
+  100% { opacity: 0; transform: translateX(-50%) translateY(-30px); }
+}
+
+.play-area {
+  display: flex;
+  justify-content: center;
+  gap: 15px;
+  margin-bottom: 30px;
+}
+
+.reel-container {
+  width: 80px;
+  height: 240px;
+  background: linear-gradient(180deg, #2d2d44 0%, #1a1a2e 100%);
+  border-radius: 10px;
+  border: 3px solid #4a4a6a;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-start;
+  position: relative;
+  box-shadow: 0 0 20px rgba(0, 0, 0, 0.5), inset 0 0 20px rgba(0, 0, 0, 0.3);
+}
+
+.reel-item {
+  height: 80px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  font-size: 3rem;
+  opacity: 0;
+  transition: opacity 0.1s;
+}
+
+.reel-item.active {
+  opacity: 1;
+}
+
+.reel-item.deactivate {
+  animation: spinOut 0.1s forwards;
+}
+
+@keyframes spinOut {
+  0% { opacity: 1; }
+  100% { opacity: 0; }
+}
+
+.reel-item.win {
+  animation: winGlow 0.5s infinite alternate;
+}
+
+@keyframes winGlow {
+  0% { text-shadow: 0 0 10px #ffd700; transform: scale(1); }
+  100% { text-shadow: 0 0 30px #ffd700, 0 0 50px #ff6b6b; transform: scale(1.1); }
+}
+
+.info {
+  display: flex;
+  gap: 40px;
+  justify-content: center;
+  flex-wrap: wrap;
+}
+
+.instructions {
+  background: rgba(255, 255, 255, 0.1);
+  padding: 15px 20px;
+  border-radius: 10px;
+  line-height: 1.6;
+}
+
+.prize-table {
+  display: flex;
+  gap: 30px;
+  justify-content: center;
+}
+
+.doubles, .triples {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+
+.prize-item {
+  background: rgba(255, 255, 255, 0.1);
+  padding: 8px 15px;
+  border-radius: 5px;
+  font-size: 0.9rem;
+  transition: all 0.3s;
+}
+
+.prize-item.active {
+  background: linear-gradient(90deg, #ffd700, #ff6b6b);
+  color: #1a1a2e;
+  font-weight: bold;
+  transform: scale(1.05);
+  box-shadow: 0 0 15px rgba(255, 215, 0, 0.5);
+}
+
+@media (max-width: 600px) {
+  .title { font-size: 2rem; }
+  #money { font-size: 2rem; }
+  .reel-container { width: 60px; height: 180px; }
+  .reel-item { height: 60px; font-size: 2rem; }
+  .info { flex-direction: column; gap: 20px; }
+  .prize-table { flex-direction: column; gap: 15px; }
+}
