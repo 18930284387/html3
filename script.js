@@ -6,6 +6,7 @@ let reelContainers = document.querySelectorAll(".reel-container");
 let spinningReels = [];
 let spinning = false;
 let reelDelay = 100;
+let spinButton = null;
 
 let money = 100;
 let moneyToAdd = 0;
@@ -28,10 +29,20 @@ let getReelItem = () => {
   return newReel;
 };
 
+let setButtonState = (disabled) => {
+  if (spinButton) {
+    spinButton.disabled = disabled;
+    spinButton.innerText = disabled ? "Spinning..." : "Spin";
+  }
+};
+
 let startSpin = () => {
   if (!spinning && money > 0) {
     document.querySelectorAll(".prize-item.active").forEach(s => {
       s.classList.remove("active");
+    });
+    document.querySelectorAll(".reel-item.win").forEach(s => {
+      s.classList.remove("win");
     });
     updateMoney(-1);
     setChange(-1);
@@ -44,6 +55,7 @@ let startSpin = () => {
     }, reelDelay * 2);
 
     spinning = true;
+    setButtonState(true);
     spinUpdate(7);
   }
 };
@@ -66,6 +78,7 @@ let spinUpdate = spinsLeft => {
       playNote(160 - (30 - spinningReels.length * 10), 0.1);
     } else {
       spinning = false;
+      setButtonState(false);
       findWins();
     }
   }
@@ -180,11 +193,19 @@ function playNote(freq, dur, type) {
   });
 }
 
-//fills reels
-reelContainers.forEach((reel, i) => {
-  for (let n = 0; n < reelLength; n++) {
-    moveReel(i);
+// Initialize
+document.addEventListener("DOMContentLoaded", () => {
+  spinButton = document.getElementById("spinButton");
+  if (spinButton) {
+    spinButton.addEventListener("click", startSpin);
   }
+
+  //fills reels
+  reelContainers.forEach((reel, i) => {
+    for (let n = 0; n < reelLength; n++) {
+      moveReel(i);
+    }
+  });
 });
 
 let addToPrizeTable = (combo, amount, target) => {
