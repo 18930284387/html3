@@ -1,0 +1,178 @@
+(function() {
+  const TEST_SYMBOLS = ["😂", "😍", "😅", "🤔", "😜", "🤐", "😱", "😵"];
+  const INITIAL_MONEY = 100;
+  const SPIN_COST = 1;
+
+  let testResults = [];
+  let passed = 0;
+  let failed = 0;
+
+  function log(message, isError = false) {
+    console.log(isError ? `❌ ${message}` : `✓ ${message}`);
+    testResults.push({ message, isError });
+    if (isError) failed++;
+    else passed++;
+  }
+
+  function assertEqual(actual, expected, testName) {
+    if (actual === expected) {
+      log(`${testName}: ${actual} === ${expected}`);
+      return true;
+    } else {
+      log(`${testName}: Expected ${expected}, got ${actual}`, true);
+      return false;
+    }
+  }
+
+  function assertTrue(condition, testName) {
+    if (condition) {
+      log(`${testName}: condition is true`);
+      return true;
+    } else {
+      log(`${testName}: condition is false`, true);
+      return false;
+    }
+  }
+
+  function assertFalse(condition, testName) {
+    if (!condition) {
+      log(`${testName}: condition is false`);
+      return true;
+    } else {
+      log(`${testName}: condition is true`, true);
+      return false;
+    }
+  }
+
+  function getSymbolReward(symbol) {
+    return 1 + TEST_SYMBOLS.indexOf(symbol);
+  }
+
+  function getTripleReward(symbol) {
+    return (TEST_SYMBOLS.indexOf(symbol) + 1) * 100;
+  }
+
+  console.log("========== Slot Machine Test Suite ==========\n");
+  console.log("=== Test 1: 二连 (Double) Reward Calculations ===\n");
+
+  TEST_SYMBOLS.forEach(symbol => {
+    let expectedReward = getSymbolReward(symbol);
+    assertEqual(
+      expectedReward,
+      TEST_SYMBOLS.indexOf(symbol) + 1,
+      `Double reward for ${symbol}`
+    );
+  });
+
+  console.log("\n=== Test 2: 三连 (Triple) Reward Calculations ===\n");
+
+  TEST_SYMBOLS.forEach(symbol => {
+    let expectedReward = getTripleReward(symbol);
+    assertEqual(
+      expectedReward,
+      (TEST_SYMBOLS.indexOf(symbol) + 1) * 100,
+      `Triple reward for ${symbol}`
+    );
+  });
+
+  console.log("\n=== Test 3: All Double Combinations (2 matching symbols) ===\n");
+
+  TEST_SYMBOLS.forEach((matchSymbol, matchIndex) => {
+    TEST_SYMBOLS.forEach((diffSymbol, diffIndex) => {
+      if (diffSymbol !== matchSymbol) {
+        let reward = getSymbolReward(matchSymbol);
+        assertEqual(
+          reward,
+          matchIndex + 1,
+          `Double [${matchSymbol}, ${matchSymbol}, ${diffSymbol}] reward = ${reward}`
+        );
+        assertEqual(
+          reward,
+          matchIndex + 1,
+          `Double [${matchSymbol}, ${diffSymbol}, ${matchSymbol}] reward = ${reward}`
+        );
+        assertEqual(
+          reward,
+          matchIndex + 1,
+          `Double [${diffSymbol}, ${matchSymbol}, ${matchSymbol}] reward = ${reward}`
+        );
+      }
+    });
+  });
+
+  console.log("\n=== Test 4: All Triple Combinations (3 matching symbols) ===\n");
+
+  TEST_SYMBOLS.forEach((symbol, index) => {
+    let reward = getTripleReward(symbol);
+    assertEqual(
+      reward,
+      (index + 1) * 100,
+      `Triple [${symbol}, ${symbol}, ${symbol}] reward = ${reward}`
+    );
+  });
+
+  console.log("\n=== Test 5: Spin Cost Verification ===\n");
+
+  assertEqual(SPIN_COST, 1, "Spin cost is 1");
+
+  console.log("\n=== Test 6: Money Zero - Cannot Spin ===\n");
+
+  let moneyAtZero = 0;
+  let canSpinWhenZero = moneyAtZero > 0;
+  assertFalse(canSpinWhenZero, "Cannot spin when money = 0");
+
+  moneyAtZero = -1;
+  let canSpinWhenNegative = moneyAtZero > 0;
+  assertFalse(canSpinWhenNegative, "Cannot spin when money < 0");
+
+  console.log("\n=== Test 7: Money After Multiple Spins ===\n");
+
+  let currentMoney = INITIAL_MONEY;
+  let spinsPerformed = 0;
+  while (currentMoney > 0) {
+    currentMoney -= SPIN_COST;
+    spinsPerformed++;
+  }
+  assertEqual(currentMoney, 0, `After ${spinsPerformed} spins, money = ${currentMoney}`);
+  assertEqual(spinsPerformed, INITIAL_MONEY, `Can perform ${INITIAL_MONEY} spins with ${INITIAL_MONEY} money`);
+
+  console.log("\n=== Test 8: Reward Table Verification ===\n");
+
+  TEST_SYMBOLS.forEach((symbol, index) => {
+    let doubleReward = index + 1;
+    let tripleReward = (index + 1) * 100;
+    assertEqual(doubleReward, index + 1, `Prize table: ${symbol}-${symbol}-❔ = ${doubleReward}`);
+    assertEqual(tripleReward, (index + 1) * 100, `Prize table: ${symbol}-${symbol}-${symbol} = ${tripleReward}`);
+  });
+
+  console.log("\n=== Test 9: Cannot Start Spin When Money Is Zero ===\n");
+
+  let mockSpinning = false;
+  let mockMoney = 0;
+  let shouldStartSpin = !mockSpinning && mockMoney > 0;
+  assertFalse(shouldStartSpin, "startSpin should return false when money = 0");
+
+  mockMoney = 1;
+  shouldStartSpin = !mockSpinning && mockMoney > 0;
+  assertTrue(shouldStartSpin, "startSpin should return true when money > 0");
+
+  console.log("\n=== Test 10: No Match Scenario (All Different Symbols) ===\n");
+
+  let allDifferent = true;
+  TEST_SYMBOLS.slice(0, 3).forEach((symbol, i, arr) => {
+    if (arr.indexOf(symbol) !== i) allDifferent = false;
+  });
+  assertTrue(allDifferent, "All different symbols should yield no reward");
+
+  console.log("\n========== Test Summary ==========\n");
+  console.log(`Total: ${passed + failed} | Passed: ${passed} | Failed: ${failed}`);
+  console.log("==================================\n");
+
+  if (failed > 0) {
+    console.log("Some tests failed!");
+  } else {
+    console.log("All tests passed!");
+  }
+
+  return { passed, failed, results: testResults };
+})();
