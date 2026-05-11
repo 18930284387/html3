@@ -10,6 +10,10 @@ let reelDelay = 100;
 let money = 100;
 let moneyToAdd = 0;
 
+let noWinStreak = 0;
+let PITY_THRESHOLD = 30;
+let forceWin = false;
+
 let audioCtx = new (window.AudioContext || window.webkitAudioContext)();
 
 let masterVolume = audioCtx.createGain();
@@ -33,6 +37,9 @@ let startSpin = () => {
     document.querySelectorAll(".prize-item.active").forEach(s => {
       s.classList.remove("active");
     });
+    if (noWinStreak >= PITY_THRESHOLD) {
+      forceWin = true;
+    }
     updateMoney(-1);
     setChange(-1);
     spinningReels.push(0);
@@ -109,6 +116,27 @@ let playWinChime = amount => {
 };
 
 let findWins = () => {
+  if (forceWin) {
+    forceWin = false;
+    let winSymbol = reelContents[Math.floor(Math.random() * reelContents.length)];
+    let isTriple = Math.random() < 0.2;
+
+    if (isTriple) {
+      reelContainers.forEach(reel => {
+        reel.children[1].innerText = winSymbol;
+      });
+    } else {
+      let diffSymbol;
+      do {
+        diffSymbol = reelContents[Math.floor(Math.random() * reelContents.length)];
+      } while (diffSymbol === winSymbol);
+      let diffIndex = Math.floor(Math.random() * 3);
+      reelContainers.forEach((reel, i) => {
+        reel.children[1].innerText = i === diffIndex ? diffSymbol : winSymbol;
+      });
+    }
+  }
+
   let winline = [];
   let symbols = {};
   reelContainers.forEach(reel => {
@@ -118,11 +146,14 @@ let findWins = () => {
     else symbols[symbol] = 1;
   });
 
+  let hasWin = false;
+
   if (
     winline.filter(s => {
       return s === winline[0];
     }).length === 3
   ) {
+    hasWin = true;
     win(3, winline[0]);
     document
       .querySelector(".triples")
@@ -130,6 +161,7 @@ let findWins = () => {
   } else {
     for (s in symbols) {
       if (symbols[s] == 2) {
+        hasWin = true;
         win(2, s);
         document
           .querySelector(".doubles")
@@ -137,6 +169,13 @@ let findWins = () => {
       }
     }
   }
+
+  if (hasWin) {
+    noWinStreak = 0;
+  } else {
+    noWinStreak++;
+  }
+  updatePityDisplay();
 };
 
 let win = (amountMatching, symbol) => {
@@ -163,6 +202,14 @@ let addToMoney = (amount, speed) => {
     setTimeout(() => {
       addToMoney(remainder);
     }, speed);
+};
+
+let updatePityDisplay = () => {
+  let remaining = PITY_THRESHOLD - noWinStreak;
+  let pityEl = document.querySelector("#pity-counter");
+  if (pityEl) {
+    pityEl.innerText = remaining <= 0 ? "保底!" : remaining;
+  }
 };
 
 function playNote(freq, dur, type) {
