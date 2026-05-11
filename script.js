@@ -3,6 +3,7 @@
 let reelContents = ["😂", "😍", "😅", "🤔", "😜", "🤐", "😱", "😵"];
 let reelLength = 3;
 let reelContainers = document.querySelectorAll(".reel-container");
+let spinButton = document.getElementById("spin-button");
 let spinningReels = [];
 let spinning = false;
 let reelDelay = 100;
@@ -44,6 +45,8 @@ let startSpin = () => {
     }, reelDelay * 2);
 
     spinning = true;
+    spinButton.disabled = true;
+    spinButton.classList.add("disabled");
     spinUpdate(7);
   }
 };
@@ -66,6 +69,8 @@ let spinUpdate = spinsLeft => {
       playNote(160 - (30 - spinningReels.length * 10), 0.1);
     } else {
       spinning = false;
+      spinButton.disabled = false;
+      spinButton.classList.remove("disabled");
       findWins();
     }
   }
