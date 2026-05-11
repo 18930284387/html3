@@ -1,0 +1,122 @@
+diff --git a/script.js b/script.js
+index 1686d03..e33ed5a 100755
+--- a/script.js
++++ b/script.js
+@@ -1,5 +1,3 @@
+-// Please like <3 and share if you enjoyed!
+-
+ let reelContents = ["😂", "😍", "😅", "🤔", "😜", "🤐", "😱", "😵"];
+ let reelLength = 3;
+ let reelContainers = document.querySelectorAll(".reel-container");
+@@ -8,13 +6,27 @@ let spinning = false;
+ let reelDelay = 100;
+ 
+ let money = 100;
+-let moneyToAdd = 0;
+ 
+-let audioCtx = new (window.AudioContext || window.webkitAudioContext)();
++let createAudioSystem = () => {
++  let AudioContextClass = window.AudioContext || window["webkitAudioContext"];
++  let context = new AudioContextClass();
++  let volume = context.createGain();
++  volume.gain.setValueAtTime(0.05, context.currentTime);
++  volume.connect(context.destination);
++  return { context, volume };
++};
++
++let { context: audioCtx, volume: masterVolume } = createAudioSystem();
++
++let ensureAudioReady = async () => {
++  if (!audioCtx || audioCtx.state === "closed") {
++    ({ context: audioCtx, volume: masterVolume } = createAudioSystem());
++  }
+ 
+-let masterVolume = audioCtx.createGain();
+-masterVolume.gain.setValueAtTime(0.05, audioCtx.currentTime);
+-masterVolume.connect(audioCtx.destination);
++  if (audioCtx.state !== "running") {
++    await audioCtx.resume();
++  }
++};
+ 
+ let getReelItem = () => {
+   let newReel = document.createElement("div");
+@@ -28,8 +40,10 @@ let getReelItem = () => {
+   return newReel;
+ };
+ 
+-let startSpin = () => {
++let startSpin = async () => {
+   if (!spinning && money > 0) {
++    await ensureAudioReady();
++
+     document.querySelectorAll(".prize-item.active").forEach(s => {
+       s.classList.remove("active");
+     });
+@@ -128,7 +142,7 @@ let findWins = () => {
+       .querySelector(".triples")
+       .children[reelContents.indexOf(winline[0])].classList.add("active");
+   } else {
+-    for (s in symbols) {
++    for (let s in symbols) {
+       if (symbols[s] == 2) {
+         win(2, s);
+         document
+@@ -166,22 +180,36 @@ let addToMoney = (amount, speed) => {
+ };
+ 
+ function playNote(freq, dur, type) {
++  if (!audioCtx || audioCtx.state !== "running") {
++    return Promise.resolve();
++  }
++
+   if (!freq) freq = 1000;
+   if (!dur) dur = 1;
+   if (!type) type = "square";
++
+   return new Promise(res => {
++    let now = audioCtx.currentTime;
+     let oscillator = audioCtx.createOscillator();
++    let noteGain = audioCtx.createGain();
++
+     oscillator.type = type;
+-    oscillator.frequency.setValueAtTime(freq, audioCtx.currentTime); // value in hertz
+-    oscillator.connect(masterVolume);
+-    oscillator.start();
+-    oscillator.stop(audioCtx.currentTime + dur);
++    oscillator.frequency.setValueAtTime(freq, now);
++
++    noteGain.gain.setValueAtTime(0.0001, now);
++    noteGain.gain.exponentialRampToValueAtTime(1, now + 0.01);
++    noteGain.gain.exponentialRampToValueAtTime(0.0001, now + dur);
++
++    oscillator.connect(noteGain);
++    noteGain.connect(masterVolume);
++
++    oscillator.start(now);
++    oscillator.stop(now + dur);
+     oscillator.onended = res;
+   });
+ }
+ 
+-//fills reels
+-reelContainers.forEach((reel, i) => {
++reelContainers.forEach((_, i) => {
+   for (let n = 0; n < reelLength; n++) {
+     moveReel(i);
+   }
+@@ -196,7 +224,6 @@ let addToPrizeTable = (combo, amount, target) => {
+   pt.append(prize);
+ };
+ 
+-//fill prize table
+ reelContents.forEach((symbol, index) => {
+   addToPrizeTable(`${symbol}-${symbol}-❔`, index + 1, "doubles");
+ });
+@@ -207,4 +234,4 @@ reelContents.forEach((symbol, index) => {
+     (index + 1) * 100,
+     "triples"
+   );
+-});
+\ No newline at end of file
++});
