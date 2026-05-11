@@ -30,6 +30,9 @@ let getReelItem = () => {
 
 let startSpin = () => {
   if (!spinning && money > 0) {
+    if (audioCtx.state === 'suspended') {
+      audioCtx.resume();
+    }
     document.querySelectorAll(".prize-item.active").forEach(s => {
       s.classList.remove("active");
     });
@@ -170,14 +173,24 @@ function playNote(freq, dur, type) {
   if (!dur) dur = 1;
   if (!type) type = "square";
   return new Promise(res => {
-    let oscillator = audioCtx.createOscillator();
-    oscillator.type = type;
-    oscillator.frequency.setValueAtTime(freq, audioCtx.currentTime); // value in hertz
-    oscillator.connect(masterVolume);
-    oscillator.start();
-    oscillator.stop(audioCtx.currentTime + dur);
-    oscillator.onended = res;
+    if (audioCtx.state === 'suspended') {
+      audioCtx.resume().then(() => {
+        createAndPlayOscillator(freq, dur, type, res);
+      });
+    } else {
+      createAndPlayOscillator(freq, dur, type, res);
+    }
   });
+}
+
+function createAndPlayOscillator(freq, dur, type, res) {
+  let oscillator = audioCtx.createOscillator();
+  oscillator.type = type;
+  oscillator.frequency.setValueAtTime(freq, audioCtx.currentTime);
+  oscillator.connect(masterVolume);
+  oscillator.start();
+  oscillator.stop(audioCtx.currentTime + dur);
+  oscillator.onended = res;
 }
 
 //fills reels
