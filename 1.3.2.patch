@@ -1,0 +1,53 @@
+diff --git a/index.html b/index.html
+index 4fed2db..7e9b51e 100755
+--- a/index.html
++++ b/index.html
+@@ -5,7 +5,34 @@
+   <meta name="viewport" content="width=device-width,initial-scale=1">
+   <title>Smiley Slots</title>
+   <link rel="stylesheet" href="style.css">
+-
++  <style>
++    #spin-btn {
++      background: linear-gradient(135deg, #ff4b2b, #ff416c);
++      color: white;
++      border: none;
++      padding: 15px 40px;
++      font-size: 24px;
++      font-weight: bold;
++      border-radius: 50px;
++      cursor: pointer;
++      box-shadow: 0 5px 15px rgba(255, 65, 108, 0.4);
++      transition: all 0.1s ease;
++      text-transform: uppercase;
++      letter-spacing: 2px;
++      outline: none;
++    }
++    #spin-btn:active {
++      transform: scale(0.95);
++      box-shadow: 0 2px 5px rgba(255, 65, 108, 0.4);
++    }
++    #spin-btn:disabled {
++      background: #cccccc;
++      color: #888888;
++      cursor: not-allowed;
++      box-shadow: none;
++      transform: none;
++    }
++  </style>
+ </head>
+ <body>
+ <!-- Please like <3 and share if you enjoyed! -->
+diff --git a/script.js b/script.js
+index 1686d03..e1c1660 100755
+--- a/script.js
++++ b/script.js
+@@ -30,6 +30,8 @@ let getReelItem = () => {
+ 
+ let startSpin = () => {
+   if (!spinning && money > 0) {
++    let btn = document.getElementById('spin-btn');
++    if (btn) btn.disabled = true;
+     document.querySelectorAll(".prize-item.active").forEach(s => {
+       s.classList.remove("active");
+     });

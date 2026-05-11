@@ -30,6 +30,8 @@ let getReelItem = () => {
 
 let startSpin = () => {
   if (!spinning && money > 0) {
+    let btn = document.getElementById('spin-btn');
+    if (btn) btn.disabled = true;
     document.querySelectorAll(".prize-item.active").forEach(s => {
       s.classList.remove("active");
     });
