@@ -44,6 +44,7 @@ let startSpin = () => {
     }, reelDelay * 2);
 
     spinning = true;
+    document.getElementById("spin-btn").disabled = true;
     spinUpdate(7);
   }
 };
@@ -66,6 +67,7 @@ let spinUpdate = spinsLeft => {
       playNote(160 - (30 - spinningReels.length * 10), 0.1);
     } else {
       spinning = false;
+      document.getElementById("spin-btn").disabled = false;
       findWins();
     }
   }

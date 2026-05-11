@@ -1,0 +1,46 @@
+diff --git a/index.html b/index.html
+index 4fed2db..a953cb9 100755
+--- a/index.html
++++ b/index.html
+@@ -11,7 +11,7 @@
+ <!-- Please like <3 and share if you enjoyed! -->
+ 
+ 
+-<div class="container" onclick="startSpin()">
++<div class="container">
+   <h1 class="title"> Smiley Sl😱ts </h1>
+   <div class="money-container">
+     <div id="money">100</div>
+@@ -24,9 +24,11 @@
+     <div class="reel-container"></div>
+   </div>
+ 
++  <button id="spin-btn" class="spin-btn" onclick="startSpin()">🎰 SPIN 🎰</button>
++
+   <div class="info">
+     <div class="instructions">
+-      Press anywhere to spin the reels.<br/> Each spin costs 1 💰<br/> Match at least two on the middle row to win!<br/> See prizes below.</div>
++      Click the SPIN button to spin the reels.<br/> Each spin costs 1 💰<br/> Match at least two on the middle row to win!<br/> See prizes below.</div>
+ 
+     <div class="prize-table">
+       <div class="doubles">
+diff --git a/script.js b/script.js
+index 1686d03..f1b0349 100755
+--- a/script.js
++++ b/script.js
+@@ -44,6 +44,7 @@ let startSpin = () => {
+     }, reelDelay * 2);
+ 
+     spinning = true;
++    document.getElementById("spin-btn").disabled = true;
+     spinUpdate(7);
+   }
+ };
+@@ -66,6 +67,7 @@ let spinUpdate = spinsLeft => {
+       playNote(160 - (30 - spinningReels.length * 10), 0.1);
+     } else {
+       spinning = false;
++      document.getElementById("spin-btn").disabled = false;
+       findWins();
+     }
+   }
