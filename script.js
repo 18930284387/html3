@@ -29,6 +29,9 @@ let getReelItem = () => {
 };
 
 let startSpin = () => {
+  if (audioCtx.state === 'suspended') {
+    audioCtx.resume();
+  }
   if (!spinning && money > 0) {
     document.querySelectorAll(".prize-item.active").forEach(s => {
       s.classList.remove("active");

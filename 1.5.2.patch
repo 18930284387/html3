@@ -1,0 +1,14 @@
+diff --git a/script.js b/script.js
+index 1686d03..491bcc5 100755
+--- a/script.js
++++ b/script.js
+@@ -29,6 +29,9 @@ let getReelItem = () => {
+ };
+ 
+ let startSpin = () => {
++  if (audioCtx.state === 'suspended') {
++    audioCtx.resume();
++  }
+   if (!spinning && money > 0) {
+     document.querySelectorAll(".prize-item.active").forEach(s => {
+       s.classList.remove("active");
