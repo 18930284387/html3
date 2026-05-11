@@ -1,0 +1,154 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>老虎机测试用例</title>
+    <style>
+        body { font-family: Arial, sans-serif; padding: 20px; }
+        .test-section { margin: 20px 0; padding: 15px; border: 1px solid #ccc; border-radius: 5px; }
+        .test-result { margin: 10px 0; padding: 10px; border-radius: 3px; }
+        .pass { background-color: #d4edda; color: #155724; }
+        .fail { background-color: #f8d7da; color: #721c24; }
+        button { padding: 10px 20px; margin: 10px 5px; cursor: pointer; }
+        #test-output { margin-top: 20px; }
+    </style>
+</head>
+<body>
+    <h1>老虎机测试用例</h1>
+    
+    <div class="test-section">
+        <h2>测试控制</h2>
+        <button onclick="runAllTests()">运行所有测试</button>
+        <button onclick="clearResults()">清除结果</button>
+    </div>
+
+    <div id="test-output"></div>
+
+    <script>
+        // 测试环境模拟
+        let testMoney = 0;
+        let testResults = [];
+
+        // 从原代码复制的奖励逻辑
+        const reelContents = ["😂", "😍", "😅", "🤔", "😜", "🤐", "😱", "😵"];
+
+        // 计算奖励的函数
+        function calculateWin(amountMatching, symbol) {
+            let winAmount = 1 + reelContents.indexOf(symbol);
+            if (amountMatching == 3) winAmount *= 100;
+            return winAmount;
+        }
+
+        // 测试结果显示
+        function addTestResult(testName, passed, message) {
+            testResults.push({ testName, passed, message });
+            const output = document.getElementById('test-output');
+            const resultDiv = document.createElement('div');
+            resultDiv.className = `test-result ${passed ? 'pass' : 'fail'}`;
+            resultDiv.innerHTML = `<strong>${testName}</strong>: ${passed ? '通过' : '失败'} - ${message}`;
+            output.appendChild(resultDiv);
+        }
+
+        function clearResults() {
+            testResults = [];
+            document.getElementById('test-output').innerHTML = '';
+        }
+
+        // 测试用例1: 测试所有二连情况的奖励值
+        function testAllDoubles() {
+            console.log('测试所有二连情况...');
+            let allPassed = true;
+            
+            reelContents.forEach((symbol, index) => {
+                const expectedWin = index + 1;
+                const actualWin = calculateWin(2, symbol);
+                const passed = expectedWin === actualWin;
+                allPassed = allPassed && passed;
+                addTestResult(
+                    `二连测试 - ${symbol}`,
+                    passed,
+                    `期望: ${expectedWin}, 实际: ${actualWin}`
+                );
+            });
+            
+            return allPassed;
+        }
+
+        // 测试用例2: 测试所有三连情况的奖励值
+        function testAllTriples() {
+            console.log('测试所有三连情况...');
+            let allPassed = true;
+            
+            reelContents.forEach((symbol, index) => {
+                const expectedWin = (index + 1) * 100;
+                const actualWin = calculateWin(3, symbol);
+                const passed = expectedWin === actualWin;
+                allPassed = allPassed && passed;
+                addTestResult(
+                    `三连测试 - ${symbol}`,
+                    passed,
+                    `期望: ${expectedWin}, 实际: ${actualWin}`
+                );
+            });
+            
+            return allPassed;
+        }
+
+        // 测试用例3: 测试金额归零时能否继续旋转
+        function testSpinWhenMoneyIsZero() {
+            console.log('测试金额归零时旋转限制...');
+            
+            // 模拟startSpin函数的逻辑
+            function mockStartSpin(money, spinning) {
+                return !spinning && money > 0;
+            }
+            
+            const testCases = [
+                { money: 100, spinning: false, expected: true, desc: '有余额未旋转时' },
+                { money: 1, spinning: false, expected: true, desc: '余额为1未旋转时' },
+                { money: 0, spinning: false, expected: false, desc: '余额为0未旋转时' },
+                { money: 100, spinning: true, expected: false, desc: '有余额正在旋转时' },
+                { money: 0, spinning: true, expected: false, desc: '余额为0正在旋转时' }
+            ];
+            
+            let allPassed = true;
+            testCases.forEach(test => {
+                const result = mockStartSpin(test.money, test.spinning);
+                const passed = result === test.expected;
+                allPassed = allPassed && passed;
+                addTestResult(
+                    `旋转限制测试 - ${test.desc}`,
+                    passed,
+                    `金额: ${test.money}, 旋转中: ${test.spinning}, 期望: ${test.expected}, 实际: ${result}`
+                );
+            });
+            
+            return allPassed;
+        }
+
+        // 运行所有测试
+        function runAllTests() {
+            clearResults();
+            console.log('开始运行所有测试...');
+            
+            let allTestsPassed = true;
+            
+            allTestsPassed = testAllDoubles() && allTestsPassed;
+            allTestsPassed = testAllTriples() && allTestsPassed;
+            allTestsPassed = testSpinWhenMoneyIsZero() && allTestsPassed;
+            
+            const summary = document.createElement('div');
+            summary.style.marginTop = '20px';
+            summary.style.padding = '15px';
+            summary.style.backgroundColor = allTestsPassed ? '#d4edda' : '#f8d7da';
+            summary.style.borderRadius = '5px';
+            summary.innerHTML = `<h3>测试总结: ${allTestsPassed ? '所有测试通过!' : '部分测试失败!'}</h3>
+                                <p>共 ${testResults.length} 个测试用例</p>`;
+            document.getElementById('test-output').appendChild(summary);
+            
+            console.log('测试完成!');
+        }
+    </script>
+</body>
+</html>
