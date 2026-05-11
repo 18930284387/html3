@@ -1,0 +1,244 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>老虎机奖励测试</title>
+  <style>
+    body { font-family: Arial, sans-serif; margin: 24px; color: #222; background: #f7f7f7; }
+    h1 { margin-bottom: 8px; }
+    p { margin-top: 0; color: #555; }
+    button { padding: 10px 16px; border: 0; border-radius: 6px; background: #2563eb; color: #fff; cursor: pointer; }
+    button:hover { background: #1d4ed8; }
+    .summary { margin: 16px 0; padding: 12px 16px; border-radius: 6px; background: #fff; box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08); }
+    .test-result { margin: 10px 0; padding: 10px; border-radius: 3px; }
+    .pass { background: #dcfce7; color: #166534; }
+    .fail { background: #fee2e2; color: #991b1b; }
+    .fixture { position: absolute; left: -9999px; top: 0; }
+    .reel-item.win, .prize-item.active { outline: 2px solid #2563eb; }
+  </style>
+  <script>
+    class FakeGain {
+      constructor() {
+        this.gain = {
+          setValueAtTime() {}
+        };
+      }
+
+      connect() {}
+    }
+
+    class FakeOscillator {
+      constructor() {
+        this.type = "square";
+        this.frequency = {
+          setValueAtTime() {}
+        };
+        this.onended = null;
+      }
+
+      connect() {}
+      start() {}
+      stop() {
+        if (this.onended) {
+          setTimeout(() => this.onended(), 0);
+        }
+      }
+    }
+
+    class FakeAudioContext {
+      constructor() {
+        this.currentTime = 0;
+        this.destination = {};
+      }
+
+      createGain() {
+        return new FakeGain();
+      }
+
+      createOscillator() {
+        return new FakeOscillator();
+      }
+    }
+
+    window.AudioContext = FakeAudioContext;
+    window.webkitAudioContext = FakeAudioContext;
+  </script>
+</head>
+<body>
+  <h1>老虎机奖励测试</h1>
+  <p>覆盖全部“二连”“三连”奖励值，以及余额归零后是否还能继续旋转。</p>
+  <button id="rerun" type="button">重新运行测试</button>
+  <div id="summary" class="summary">等待测试开始...</div>
+  <div id="results"></div>
+
+  <div class="fixture">
+    <div class="money-container">
+      <div id="money">100</div>
+      <div class="changes"></div>
+    </div>
+    <div class="play-area">
+      <div class="reel-container"></div>
+      <div class="reel-container"></div>
+      <div class="reel-container"></div>
+    </div>
+    <div class="prize-table">
+      <div class="doubles"></div>
+      <div class="triples"></div>
+    </div>
+  </div>
+
+  <script src="script.js"></script>
+  <script>
+    const summaryElement = document.querySelector("#summary");
+    const resultsElement = document.querySelector("#results");
+
+    playNote = () => Promise.resolve();
+    playWinChime = () => {};
+    addToMoney = amount => {
+      updateMoney(amount);
+    };
+
+    const createReelItem = symbol => {
+      const item = document.createElement("div");
+      item.className = "reel-item active";
+      item.innerText = symbol;
+      return item;
+    };
+
+    const setMoneyValue = value => {
+      money = value;
+      document.querySelector("#money").innerText = value;
+    };
+
+    const clearRoundState = () => {
+      document.querySelector(".changes").innerHTML = "";
+      document.querySelectorAll(".prize-item.active").forEach(item => item.classList.remove("active"));
+      document.querySelectorAll(".reel-item.win").forEach(item => item.classList.remove("win"));
+      spinning = false;
+      spinningReels.length = 0;
+    };
+
+    const setMiddleRow = symbols => {
+      reelContainers.forEach((reel, reelIndex) => {
+        reel.innerHTML = "";
+        const targetSymbol = symbols[reelIndex];
+        const symbolIndex = reelContents.indexOf(targetSymbol);
+        const upperSymbol = reelContents[(symbolIndex + 1) % reelContents.length];
+        const lowerSymbol = reelContents[(symbolIndex + 2) % reelContents.length];
+        reel.append(createReelItem(upperSymbol), createReelItem(targetSymbol), createReelItem(lowerSymbol));
+      });
+    };
+
+    const currentMiddleRow = () => Array.from(reelContainers).map(reel => reel.children[1].innerText);
+
+    const activePrizeAttributes = selector => Array.from(document.querySelectorAll(`${selector} .prize-item.active`)).map(item => item.getAttribute("win-attr"));
+
+    const assert = (condition, message) => {
+      if (!condition) {
+        throw new Error(message);
+      }
+    };
+
+    const logResult = (name, passed, details) => {
+      const result = document.createElement("div");
+      result.className = `test-result ${passed ? "pass" : "fail"}`;
+      result.innerText = `${passed ? "✓" : "✗"} ${name}：${details}`;
+      resultsElement.append(result);
+    };
+
+    const runDoubleCase = (symbol, index) => {
+      clearRoundState();
+      setMoneyValue(0);
+      const otherSymbol = reelContents[(index + 1) % reelContents.length];
+      setMiddleRow([symbol, symbol, otherSymbol]);
+      findWins();
+
+      const expectedReward = index + 1;
+      const activeDoubles = activePrizeAttributes(".doubles");
+
+      assert(money === expectedReward, `奖励应为 ${expectedReward}，实际为 ${money}`);
+      assert(document.querySelectorAll(".reel-item.win").length === 2, "二连时应只有 2 个中奖格子高亮");
+      assert(activeDoubles.length === 1, "二连奖表应只高亮 1 项");
+      assert(activeDoubles[0] === `${symbol}${symbol}`, "二连高亮奖项与中奖符号不一致");
+      assert(activePrizeAttributes(".triples").length === 0, "二连时不应高亮三连奖项");
+    };
+
+    const runTripleCase = (symbol, index) => {
+      clearRoundState();
+      setMoneyValue(0);
+      setMiddleRow([symbol, symbol, symbol]);
+      findWins();
+
+      const expectedReward = (index + 1) * 100;
+      const activeTriples = activePrizeAttributes(".triples");
+
+      assert(money === expectedReward, `奖励应为 ${expectedReward}，实际为 ${money}`);
+      assert(document.querySelectorAll(".reel-item.win").length === 3, "三连时应有 3 个中奖格子高亮");
+      assert(activeTriples.length === 1, "三连奖表应只高亮 1 项");
+      assert(activeTriples[0] === `${symbol}${symbol}${symbol}`, "三连高亮奖项与中奖符号不一致");
+      assert(activePrizeAttributes(".doubles").length === 0, "三连时不应高亮二连奖项");
+    };
+
+    const runZeroMoneySpinCase = () => {
+      clearRoundState();
+      setMoneyValue(0);
+      setMiddleRow([reelContents[0], reelContents[1], reelContents[2]]);
+      const beforeRow = JSON.stringify(currentMiddleRow());
+      const beforeChanges = document.querySelector(".changes").children.length;
+
+      startSpin();
+
+      assert(money === 0, `余额为 0 时不应扣费，实际余额为 ${money}`);
+      assert(spinning === false, "余额为 0 时不应进入旋转状态");
+      assert(spinningReels.length === 0, "余额为 0 时不应登记任何旋转中的滚轮");
+      assert(JSON.stringify(currentMiddleRow()) === beforeRow, "余额为 0 时滚轮内容不应变化");
+      assert(document.querySelector(".changes").children.length === beforeChanges, "余额为 0 时不应新增扣费记录");
+    };
+
+    const runTests = () => {
+      resultsElement.innerHTML = "";
+      let passed = 0;
+      let failed = 0;
+
+      const testCases = [];
+
+      reelContents.forEach((symbol, index) => {
+        testCases.push({
+          name: `二连奖励 ${symbol}`,
+          execute: () => runDoubleCase(symbol, index)
+        });
+      });
+
+      reelContents.forEach((symbol, index) => {
+        testCases.push({
+          name: `三连奖励 ${symbol}`,
+          execute: () => runTripleCase(symbol, index)
+        });
+      });
+
+      testCases.push({
+        name: "余额归零后禁止继续旋转",
+        execute: runZeroMoneySpinCase
+      });
+
+      testCases.forEach(testCase => {
+        try {
+          testCase.execute();
+          passed += 1;
+          logResult(testCase.name, true, "结果与规定值一致");
+        } catch (error) {
+          failed += 1;
+          logResult(testCase.name, false, error.message);
+        }
+      });
+
+      summaryElement.innerText = `共 ${testCases.length} 项测试，${passed} 项通过，${failed} 项失败。`;
+      summaryElement.className = `summary ${failed === 0 ? "pass" : "fail"}`;
+    };
+
+    document.querySelector("#rerun").addEventListener("click", runTests);
+    runTests();
+  </script>
+</body>
+</html>
