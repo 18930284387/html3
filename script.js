@@ -170,13 +170,20 @@ function playNote(freq, dur, type) {
   if (!dur) dur = 1;
   if (!type) type = "square";
   return new Promise(res => {
-    let oscillator = audioCtx.createOscillator();
-    oscillator.type = type;
-    oscillator.frequency.setValueAtTime(freq, audioCtx.currentTime); // value in hertz
-    oscillator.connect(masterVolume);
-    oscillator.start();
-    oscillator.stop(audioCtx.currentTime + dur);
-    oscillator.onended = res;
+    let doPlay = () => {
+      let oscillator = audioCtx.createOscillator();
+      oscillator.type = type;
+      oscillator.frequency.setValueAtTime(freq, audioCtx.currentTime);
+      oscillator.connect(masterVolume);
+      oscillator.start();
+      oscillator.stop(audioCtx.currentTime + dur);
+      oscillator.onended = res;
+    };
+    if (audioCtx.state === "suspended") {
+      audioCtx.resume().then(doPlay);
+    } else {
+      doPlay();
+    }
   });
 }
 
