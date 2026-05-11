@@ -1,0 +1,350 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>老虎机测试用例</title>
+  <style>
+    body { font-family: monospace; max-width: 900px; margin: 20px auto; padding: 0 20px; background: #1a1a2e; color: #eee; }
+    h1 { color: #e94560; text-align: center; }
+    h2 { color: #0f3460; background: #e94560; padding: 8px 16px; border-radius: 4px; }
+    .summary { background: #16213e; padding: 16px; border-radius: 8px; margin: 16px 0; }
+    .summary .pass { color: #4ecca3; }
+    .summary .fail { color: #e94560; }
+    .test-case { background: #16213e; margin: 8px 0; padding: 12px 16px; border-radius: 6px; border-left: 4px solid #555; }
+    .test-case.pass { border-left-color: #4ecca3; }
+    .test-case.fail { border-left-color: #e94560; }
+    .test-case .name { font-weight: bold; }
+    .test-case .result { margin-top: 4px; }
+    .test-case .pass-text { color: #4ecca3; }
+    .test-case .fail-text { color: #e94560; }
+    .test-case .detail { color: #aaa; font-size: 0.9em; margin-top: 4px; }
+    table { width: 100%; border-collapse: collapse; margin: 12px 0; }
+    th, td { border: 1px solid #333; padding: 8px 12px; text-align: center; }
+    th { background: #0f3460; }
+    td.pass-cell { background: #1a3a2a; }
+    td.fail-cell { background: #3a1a1a; }
+    .hidden { display: none; }
+    pre { background: #0f3460; padding: 12px; border-radius: 4px; overflow-x: auto; white-space: pre-wrap; }
+  </style>
+</head>
+<body>
+
+<h1>🎰 老虎机测试用例</h1>
+
+<div class="summary" id="summary"></div>
+
+<div id="results"></div>
+
+<div class="hidden" id="game-dom">
+  <div class="container">
+    <div id="money">100</div>
+    <div class="changes"></div>
+    <div class="play-area">
+      <div class="reel-container"></div>
+      <div class="reel-container"></div>
+      <div class="reel-container"></div>
+    </div>
+    <div class="info">
+      <div class="prize-table">
+        <div class="doubles"></div>
+        <div class="triples"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script src="script.js"></script>
+<script>
+(function() {
+  let totalTests = 0;
+  let passedTests = 0;
+  let failedTests = 0;
+  let resultsContainer = document.getElementById("results");
+
+  function assert(condition, testName, detail) {
+    totalTests++;
+    let pass = !!condition;
+    if (pass) passedTests++;
+    else failedTests++;
+
+    let div = document.createElement("div");
+    div.className = "test-case " + (pass ? "pass" : "fail");
+    div.innerHTML =
+      '<div class="name">' + (pass ? "✅ " : "❌ ") + testName + "</div>" +
+      '<div class="result ' + (pass ? "pass-text" : "fail-text") + '">' +
+        (pass ? "通过" : "失败") +
+      "</div>" +
+      (detail ? '<div class="detail">' + detail + "</div>" : "");
+    resultsContainer.appendChild(div);
+  }
+
+  function assertEqual(actual, expected, testName) {
+    let pass = actual === expected;
+    let detail = pass ? "" : "期望: " + expected + ", 实际: " + actual;
+    assert(pass, testName, detail);
+  }
+
+  function updateSummary() {
+    let summary = document.getElementById("summary");
+    let allPass = failedTests === 0;
+    summary.innerHTML =
+      '<div>总计: <b>' + totalTests + "</b> 个测试用例</div>" +
+      '<div class="pass">通过: <b>' + passedTests + "</b></div>" +
+      '<div class="fail">失败: <b>' + failedTests + "</b></div>" +
+      '<div style="margin-top:8px;font-size:1.2em;">' +
+        (allPass ? '<span class="pass">🎉 全部测试通过!</span>' : '<span class="fail">⚠️ 存在失败用例</span>') +
+      "</div>";
+  }
+
+  // ============================================================
+  // 准备工作：保存原始 addToMoney，替换为同步版本
+  // ============================================================
+  let originalAddToMoney = addToMoney;
+  addToMoney = function(amount, speed) {
+    updateMoney(amount);
+  };
+
+  let reelContents = ["😂", "😍", "😅", "🤔", "😜", "🤐", "😱", "😵"];
+
+  // ============================================================
+  // 第一部分：验证所有二连（Doubles）奖励值
+  // ============================================================
+  let h2_1 = document.createElement("h2");
+  h2_1.textContent = "一、二连（Doubles）奖励值验证（共8项）";
+  resultsContainer.appendChild(h2_1);
+
+  reelContents.forEach((symbol, index) => {
+    let expectedWin = 1 + index;
+
+    money = 100;
+    win(2, symbol);
+    let actualWin = money - 100;
+
+    assertEqual(
+      actualWin,
+      expectedWin,
+      "二连 " + symbol + " (index=" + index + ") 奖励应为 " + expectedWin
+    );
+  });
+
+  // ============================================================
+  // 第二部分：验证所有三连（Triples）奖励值
+  // ============================================================
+  let h2_2 = document.createElement("h2");
+  h2_2.textContent = "二、三连（Triples）奖励值验证（共8项）";
+  resultsContainer.appendChild(h2_2);
+
+  reelContents.forEach((symbol, index) => {
+    let expectedWin = (1 + index) * 100;
+
+    money = 100;
+    win(3, symbol);
+    let actualWin = money - 100;
+
+    assertEqual(
+      actualWin,
+      expectedWin,
+      "三连 " + symbol + " (index=" + index + ") 奖励应为 " + expectedWin
+    );
+  });
+
+  // ============================================================
+  // 第三部分：验证 findWins() 对二连的检测
+  // ============================================================
+  let h2_3 = document.createElement("h2");
+  h2_3.textContent = "三、findWins() 二连检测验证（共8项）";
+  resultsContainer.appendChild(h2_3);
+
+  function setReelSymbols(s1, s2, s3) {
+    reelContainers.forEach(rc => {
+      while (rc.children.length > 0) {
+        rc.removeChild(rc.lastElementChild);
+      }
+    });
+
+    [s1, s2, s3].forEach((symbol, reelIdx) => {
+      let reel = reelContainers[reelIdx];
+      for (let i = 0; i < 3; i++) {
+        let item = document.createElement("div");
+        item.className = "reel-item";
+        if (i === 1) {
+          item.innerText = symbol;
+        } else {
+          let otherSymbols = reelContents.filter(s => s !== symbol);
+          item.innerText = otherSymbols[Math.floor(Math.random() * otherSymbols.length)];
+        }
+        reel.appendChild(item);
+      }
+    });
+  }
+
+  reelContents.forEach((symbol, index) => {
+    let expectedWin = 1 + index;
+    let otherSymbol = reelContents[(index + 1) % reelContents.length];
+    setReelSymbols(symbol, symbol, otherSymbol);
+
+    money = 100;
+    findWins();
+    let actualWin = money - 100;
+
+    assertEqual(
+      actualWin,
+      expectedWin,
+      "findWins 二连 " + symbol + "-" + symbol + "-" + otherSymbol + " 奖励应为 " + expectedWin
+    );
+  });
+
+  // ============================================================
+  // 第四部分：验证 findWins() 对三连的检测
+  // ============================================================
+  let h2_4 = document.createElement("h2");
+  h2_4.textContent = "四、findWins() 三连检测验证（共8项）";
+  resultsContainer.appendChild(h2_4);
+
+  reelContents.forEach((symbol, index) => {
+    let expectedWin = (1 + index) * 100;
+
+    setReelSymbols(symbol, symbol, symbol);
+
+    money = 100;
+    findWins();
+    let actualWin = money - 100;
+
+    assertEqual(
+      actualWin,
+      expectedWin,
+      "findWins 三连 " + symbol + "-" + symbol + "-" + symbol + " 奖励应为 " + expectedWin
+    );
+  });
+
+  // ============================================================
+  // 第五部分：验证金额归零后能否继续旋转
+  // ============================================================
+  let h2_5 = document.createElement("h2");
+  h2_5.textContent = "五、金额归零后旋转能力验证（共5项）";
+  resultsContainer.appendChild(h2_5);
+
+  // 测试1：money = 0 时，startSpin() 不应启动旋转
+  money = 0;
+  spinning = false;
+  spinningReels = [];
+  startSpin();
+  assert(
+    !spinning,
+    "金额为 0 时，startSpin() 不应启动旋转（spinning 应为 false）"
+  );
+  assert(
+    spinningReels.length === 0,
+    "金额为 0 时，spinningReels 应为空（未添加任何 reel）"
+  );
+
+  // 测试2：money = 1 时，startSpin() 应正常启动旋转
+  money = 1;
+  spinning = false;
+  spinningReels = [];
+  startSpin();
+  assert(
+    spinning,
+    "金额为 1 时，startSpin() 应正常启动旋转（spinning 应为 true）"
+  );
+  assert(
+    spinningReels.length > 0,
+    "金额为 1 时，spinningReels 应包含待旋转的 reel"
+  );
+
+  // 测试3：money = -1（负数）时，startSpin() 不应启动旋转
+  money = -1;
+  spinning = false;
+  spinningReels = [];
+  startSpin();
+  assert(
+    !spinning,
+    "金额为负数时，startSpin() 不应启动旋转（spinning 应为 false）"
+  );
+
+  // ============================================================
+  // 第六部分：奖励汇总表
+  // ============================================================
+  let h2_6 = document.createElement("h2");
+  h2_6.textContent = "六、奖励规则汇总表";
+  resultsContainer.appendChild(h2_6);
+
+  let table = document.createElement("table");
+  table.innerHTML =
+    "<thead><tr>" +
+      "<th>符号</th><th>Index</th>" +
+      "<th>二连奖励</th><th>二连测试</th>" +
+      "<th>三连奖励</th><th>三连测试</th>" +
+    "</tr></thead><tbody></tbody>";
+  let tbody = table.querySelector("tbody");
+
+  reelContents.forEach((symbol, index) => {
+    let doubleExpected = 1 + index;
+    let tripleExpected = (1 + index) * 100;
+
+    money = 100;
+    win(2, symbol);
+    let doubleActual = money - 100;
+    let doublePass = doubleActual === doubleExpected;
+
+    money = 100;
+    win(3, symbol);
+    let tripleActual = money - 100;
+    let triplePass = tripleActual === tripleExpected;
+
+    let row = document.createElement("tr");
+    row.innerHTML =
+      "<td>" + symbol + "</td>" +
+      "<td>" + index + "</td>" +
+      "<td>" + doubleExpected + "</td>" +
+      '<td class="' + (doublePass ? "pass-cell" : "fail-cell") + '">' +
+        (doublePass ? "✅ " + doubleActual : "❌ " + doubleActual) +
+      "</td>" +
+      "<td>" + tripleExpected + "</td>" +
+      '<td class="' + (triplePass ? "pass-cell" : "fail-cell") + '">' +
+        (triplePass ? "✅ " + tripleActual : "❌ " + tripleActual) +
+      "</td>";
+    tbody.appendChild(row);
+  });
+
+  resultsContainer.appendChild(table);
+
+  // ============================================================
+  // 第七部分：金额归零行为分析
+  // ============================================================
+  let h2_7 = document.createElement("h2");
+  h2_7.textContent = "七、金额归零行为分析";
+  resultsContainer.appendChild(h2_7);
+
+  let analysisDiv = document.createElement("div");
+  analysisDiv.style.cssText = "background:#16213e;padding:16px;border-radius:8px;margin:8px 0;line-height:1.8;";
+  analysisDiv.innerHTML =
+    "<p>📋 <b>代码分析：</b><code>startSpin()</code> 函数（script.js 第 32 行）包含条件判断：</p>" +
+    "<pre>if (!spinning &amp;&amp; money &gt; 0) {\n" +
+    "  // ... 执行旋转逻辑\n" +
+    "}</pre>" +
+    "<p>🔴 <b>结论：</b>当 <code>money === 0</code> 时，条件 <code>money &gt; 0</code> 为 <code>false</code>，" +
+    "玩家<b>无法</b>继续旋转老虎机。金额归零即游戏结束。</p>" +
+    "<p>💡 <b>建议：</b>如果产品需求允许金额为 0 时继续游戏（例如每日免费旋转），" +
+    "可以将条件改为 <code>money &gt;= 0</code> 或移除金额检查，改为其他限制机制。</p>";
+  resultsContainer.appendChild(analysisDiv);
+
+  // ============================================================
+  // 恢复原始 addToMoney
+  // ============================================================
+  addToMoney = originalAddToMoney;
+
+  // ============================================================
+  // 最终汇总
+  // ============================================================
+  updateSummary();
+
+  money = 100;
+  spinning = false;
+  spinningReels = [];
+})();
+</script>
+
+</body>
+</html>
