@@ -1,0 +1,66 @@
+diff --git a/index.html b/index.html
+index 4fed2db..e66e5fa 100755
+--- a/index.html
++++ b/index.html
+@@ -11,7 +11,7 @@
+ <!-- Please like <3 and share if you enjoyed! -->
+ 
+ 
+-<div class="container" onclick="startSpin()">
++<div class="container">
+   <h1 class="title"> Smiley Sl😱ts </h1>
+   <div class="money-container">
+     <div id="money">100</div>
+@@ -24,9 +24,11 @@
+     <div class="reel-container"></div>
+   </div>
+ 
++  <button id="spin-btn" class="spin-button">🎰 SPIN</button>
++
+   <div class="info">
+     <div class="instructions">
+-      Press anywhere to spin the reels.<br/> Each spin costs 1 💰<br/> Match at least two on the middle row to win!<br/> See prizes below.</div>
++      Press the SPIN button to spin the reels.<br/> Each spin costs 1 💰<br/> Match at least two on the middle row to win!<br/> See prizes below.</div>
+ 
+     <div class="prize-table">
+       <div class="doubles">
+diff --git a/script.js b/script.js
+index 1686d03..8d0bb8c 100755
+--- a/script.js
++++ b/script.js
+@@ -28,6 +28,8 @@ let getReelItem = () => {
+   return newReel;
+ };
+ 
++let spinButton = document.getElementById("spin-btn");
++
+ let startSpin = () => {
+   if (!spinning && money > 0) {
+     document.querySelectorAll(".prize-item.active").forEach(s => {
+@@ -44,10 +46,18 @@ let startSpin = () => {
+     }, reelDelay * 2);
+ 
+     spinning = true;
++    spinButton.disabled = true;
+     spinUpdate(7);
+   }
+ };
+ 
++spinButton.addEventListener("click", () => {
++  if (audioCtx.state === "suspended") {
++    audioCtx.resume();
++  }
++  startSpin();
++});
++
+ let spinUpdate = spinsLeft => {
+   spinningReels.forEach(n => {
+     moveReel(n);
+@@ -66,6 +76,7 @@ let spinUpdate = spinsLeft => {
+       playNote(160 - (30 - spinningReels.length * 10), 0.1);
+     } else {
+       spinning = false;
++      spinButton.disabled = false;
+       findWins();
+     }
+   }

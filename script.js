@@ -28,6 +28,8 @@ let getReelItem = () => {
   return newReel;
 };
 
+let spinButton = document.getElementById("spin-btn");
+
 let startSpin = () => {
   if (!spinning && money > 0) {
     document.querySelectorAll(".prize-item.active").forEach(s => {
@@ -44,9 +46,17 @@ let startSpin = () => {
     }, reelDelay * 2);
 
     spinning = true;
+    spinButton.disabled = true;
     spinUpdate(7);
   }
 };
+
+spinButton.addEventListener("click", () => {
+  if (audioCtx.state === "suspended") {
+    audioCtx.resume();
+  }
+  startSpin();
+});
 
 let spinUpdate = spinsLeft => {
   spinningReels.forEach(n => {
@@ -66,6 +76,7 @@ let spinUpdate = spinsLeft => {
       playNote(160 - (30 - spinningReels.length * 10), 0.1);
     } else {
       spinning = false;
+      spinButton.disabled = false;
       findWins();
     }
   }
