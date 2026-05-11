@@ -3,6 +3,7 @@
 let reelContents = ["😂", "😍", "😅", "🤔", "😜", "🤐", "😱", "😵"];
 let reelLength = 3;
 let reelContainers = document.querySelectorAll(".reel-container");
+let spinButton = document.querySelector("#spin-button");
 let spinningReels = [];
 let spinning = false;
 let reelDelay = 100;
@@ -28,24 +29,36 @@ let getReelItem = () => {
   return newReel;
 };
 
-let startSpin = () => {
-  if (!spinning && money > 0) {
-    document.querySelectorAll(".prize-item.active").forEach(s => {
-      s.classList.remove("active");
-    });
-    updateMoney(-1);
-    setChange(-1);
-    spinningReels.push(0);
-    setTimeout(() => {
-      spinningReels.push(1);
-    }, reelDelay);
-    setTimeout(() => {
-      spinningReels.push(2);
-    }, reelDelay * 2);
+let updateSpinButtonState = () => {
+  if (!spinButton) return;
+  spinButton.disabled = spinning || money <= 0;
+  if (spinning) spinButton.innerText = "🎰 SPINNING...";
+  else if (money <= 0) spinButton.innerText = "💸 OUT OF COINS";
+  else spinButton.innerText = "🎰 SPIN NOW";
+};
 
-    spinning = true;
-    spinUpdate(7);
+let startSpin = () => {
+  if (spinning || money <= 0) {
+    updateSpinButtonState();
+    return;
   }
+
+  document.querySelectorAll(".prize-item.active").forEach(s => {
+    s.classList.remove("active");
+  });
+  updateMoney(-1);
+  setChange(-1);
+  spinningReels.push(0);
+  setTimeout(() => {
+    spinningReels.push(1);
+  }, reelDelay);
+  setTimeout(() => {
+    spinningReels.push(2);
+  }, reelDelay * 2);
+
+  spinning = true;
+  updateSpinButtonState();
+  spinUpdate(7);
 };
 
 let spinUpdate = spinsLeft => {
@@ -67,6 +80,7 @@ let spinUpdate = spinsLeft => {
     } else {
       spinning = false;
       findWins();
+      updateSpinButtonState();
     }
   }
 };
@@ -85,6 +99,7 @@ let moveReel = reelIndex => {
 let updateMoney = change => {
   money += change;
   document.querySelector("#money").innerText = money;
+  updateSpinButtonState();
 };
 
 let setChange = change => {
@@ -208,3 +223,24 @@ reelContents.forEach((symbol, index) => {
     "triples"
   );
 });
+
+if (spinButton) {
+  ["pointerdown", "keydown"].forEach(eventName => {
+    spinButton.addEventListener(eventName, () => {
+      spinButton.classList.add("is-pressed");
+    });
+  });
+
+  ["pointerup", "pointerleave", "keyup", "blur"].forEach(eventName => {
+    spinButton.addEventListener(eventName, () => {
+      spinButton.classList.remove("is-pressed");
+    });
+  });
+
+  spinButton.addEventListener("click", () => {
+    if (audioCtx.state === "suspended") audioCtx.resume();
+    startSpin();
+  });
+}
+
+updateSpinButtonState();
