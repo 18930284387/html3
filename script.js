@@ -10,6 +10,8 @@ let reelDelay = 100;
 let money = 100;
 let moneyToAdd = 0;
 
+let pityCount = 0;
+const pityThreshold = 30;
 let audioCtx = new (window.AudioContext || window.webkitAudioContext)();
 
 let masterVolume = audioCtx.createGain();
@@ -33,6 +35,8 @@ let startSpin = () => {
     document.querySelectorAll(".prize-item.active").forEach(s => {
       s.classList.remove("active");
     });
+    pityCount++;
+    updatePityDisplay();
     updateMoney(-1);
     setChange(-1);
     spinningReels.push(0);
@@ -68,6 +72,23 @@ let spinUpdate = spinsLeft => {
       spinning = false;
       findWins();
     }
+  }
+};
+
+let setReelItem = (reelIndex, symbol) => {
+  let selectedReel = reelContainers[reelIndex];
+  let newReel = document.createElement("div");
+  newReel.innerHTML = symbol;
+  newReel.classList.add("reel-item");
+  setTimeout(() => {
+    newReel.classList.add("active");
+  }, 0);
+  selectedReel.prepend(newReel);
+  if (selectedReel.children.length > reelLength) {
+    selectedReel.lastElementChild.classList.add("deactivate");
+    setTimeout(() => {
+      selectedReel.removeChild(selectedReel.lastElementChild);
+    }, reelDelay);
   }
 };
 
@@ -108,6 +129,27 @@ let playWinChime = amount => {
     }, 70);
 };
 
+let triggerPityWin = () => {
+  let randomSymbol = reelContents[Math.floor(Math.random() * reelContents.length)];
+  let isTriple = Math.random() < 0.2;
+  
+  if (isTriple) {
+    setReelItem(0, randomSymbol);
+    setReelItem(1, randomSymbol);
+    setReelItem(2, randomSymbol);
+  } else {
+    let positions = [0, 1, 2];
+    let pos1 = positions.splice(Math.floor(Math.random() * positions.length), 1)[0];
+    let pos2 = positions.splice(Math.floor(Math.random() * positions.length), 1)[0];
+    setReelItem(pos1, randomSymbol);
+    setReelItem(pos2, randomSymbol);
+  }
+  
+  setTimeout(() => {
+    findWins();
+  }, 0);
+};
+
 let findWins = () => {
   let winline = [];
   let symbols = {};
@@ -118,6 +160,7 @@ let findWins = () => {
     else symbols[symbol] = 1;
   });
 
+  let hasWin = false;
   if (
     winline.filter(s => {
       return s === winline[0];
@@ -127,6 +170,7 @@ let findWins = () => {
     document
       .querySelector(".triples")
       .children[reelContents.indexOf(winline[0])].classList.add("active");
+    hasWin = true;
   } else {
     for (s in symbols) {
       if (symbols[s] == 2) {
@@ -134,8 +178,18 @@ let findWins = () => {
         document
           .querySelector(".doubles")
           .children[reelContents.indexOf(s)].classList.add("active");
+        hasWin = true;
       }
     }
+  }
+
+  if (hasWin) {
+    pityCount = 0;
+    updatePityDisplay();
+  } else if (pityCount >= pityThreshold) {
+    pityCount = 0;
+    updatePityDisplay();
+    triggerPityWin();
   }
 };
 
@@ -150,6 +204,13 @@ let win = (amountMatching, symbol) => {
 
   setChange(winAmount);
   addToMoney(winAmount);
+};
+
+let updatePityDisplay = () => {
+  let pityDisplay = document.querySelector("#pity-display");
+  if (pityDisplay) {
+    pityDisplay.innerText = pityThreshold - pityCount;
+  }
 };
 
 let addToMoney = (amount, speed) => {
@@ -208,3 +269,5 @@ reelContents.forEach((symbol, index) => {
     "triples"
   );
 });
+
+updatePityDisplay();
