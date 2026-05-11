@@ -6,6 +6,9 @@ let reelContainers = document.querySelectorAll(".reel-container");
 let spinningReels = [];
 let spinning = false;
 let reelDelay = 100;
+let pityThreshold = 30;
+let spinsSinceReward = 0;
+let forcedSpinOutcome = null;
 
 let money = 100;
 let moneyToAdd = 0;
@@ -15,6 +18,61 @@ let audioCtx = new (window.AudioContext || window.webkitAudioContext)();
 let masterVolume = audioCtx.createGain();
 masterVolume.gain.setValueAtTime(0.05, audioCtx.currentTime);
 masterVolume.connect(audioCtx.destination);
+
+let pityDisplay = document.createElement("div");
+pityDisplay.style.fontSize = "14px";
+pityDisplay.style.marginTop = "10px";
+pityDisplay.style.opacity = "0.85";
+document.querySelector(".money-container").append(pityDisplay);
+
+let updatePityDisplay = () => {
+  let spinsUntilPity = Math.max(0, pityThreshold - spinsSinceReward);
+  pityDisplay.innerText =
+    spinsUntilPity === 0
+      ? "保底剩余：0（下次必中）"
+      : `保底剩余：${spinsUntilPity}`;
+};
+
+let getRandomSymbol = excludedSymbol => {
+  let availableSymbols = reelContents.filter(symbol => {
+    return symbol !== excludedSymbol;
+  });
+  return availableSymbols[Math.floor(Math.random() * availableSymbols.length)];
+};
+
+let getForcedSpinOutcome = () => {
+  let amountMatching = Math.random() < 0.2 ? 3 : 2;
+  let winningSymbol =
+    reelContents[Math.floor(Math.random() * reelContents.length)];
+  let winline = [winningSymbol, winningSymbol, winningSymbol];
+
+  if (amountMatching === 2) {
+    let oddIndex = Math.floor(Math.random() * reelLength);
+    winline[oddIndex] = getRandomSymbol(winningSymbol);
+  }
+
+  return {
+    amountMatching,
+    symbol: winningSymbol,
+    winline
+  };
+};
+
+let applyForcedSpinOutcome = () => {
+  if (!forcedSpinOutcome) return;
+
+  reelContainers.forEach((reel, index) => {
+    reel.children[1].innerText = forcedSpinOutcome.winline[index];
+  });
+};
+
+let finishSpin = didWin => {
+  if (didWin) spinsSinceReward = 0;
+  else spinsSinceReward++;
+
+  forcedSpinOutcome = null;
+  updatePityDisplay();
+};
 
 let getReelItem = () => {
   let newReel = document.createElement("div");
@@ -33,6 +91,14 @@ let startSpin = () => {
     document.querySelectorAll(".prize-item.active").forEach(s => {
       s.classList.remove("active");
     });
+    document.querySelectorAll(".reel-item.win").forEach(s => {
+      s.classList.remove("win");
+    });
+
+    if (spinsSinceReward >= pityThreshold) {
+      forcedSpinOutcome = getForcedSpinOutcome();
+    }
+
     updateMoney(-1);
     setChange(-1);
     spinningReels.push(0);
@@ -66,6 +132,7 @@ let spinUpdate = spinsLeft => {
       playNote(160 - (30 - spinningReels.length * 10), 0.1);
     } else {
       spinning = false;
+      applyForcedSpinOutcome();
       findWins();
     }
   }
@@ -111,6 +178,8 @@ let playWinChime = amount => {
 let findWins = () => {
   let winline = [];
   let symbols = {};
+  let didWin = false;
+
   reelContainers.forEach(reel => {
     let symbol = reel.children[1].innerText;
     winline.push(symbol);
@@ -123,13 +192,15 @@ let findWins = () => {
       return s === winline[0];
     }).length === 3
   ) {
+    didWin = true;
     win(3, winline[0]);
     document
       .querySelector(".triples")
       .children[reelContents.indexOf(winline[0])].classList.add("active");
   } else {
-    for (s in symbols) {
+    for (let s in symbols) {
       if (symbols[s] == 2) {
+        didWin = true;
         win(2, s);
         document
           .querySelector(".doubles")
@@ -137,6 +208,8 @@ let findWins = () => {
       }
     }
   }
+
+  finishSpin(didWin);
 };
 
 let win = (amountMatching, symbol) => {
@@ -172,7 +245,7 @@ function playNote(freq, dur, type) {
   return new Promise(res => {
     let oscillator = audioCtx.createOscillator();
     oscillator.type = type;
-    oscillator.frequency.setValueAtTime(freq, audioCtx.currentTime); // value in hertz
+    oscillator.frequency.setValueAtTime(freq, audioCtx.currentTime);
     oscillator.connect(masterVolume);
     oscillator.start();
     oscillator.stop(audioCtx.currentTime + dur);
@@ -208,3 +281,5 @@ reelContents.forEach((symbol, index) => {
     "triples"
   );
 });
+
+updatePityDisplay();
