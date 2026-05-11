@@ -10,6 +10,11 @@ let reelDelay = 100;
 let money = 100;
 let moneyToAdd = 0;
 
+let pityCount = 30;
+let currentPity = 30;
+let pityTriggered = false;
+let pityCombo = null;
+
 let audioCtx = new (window.AudioContext || window.webkitAudioContext)();
 
 let masterVolume = audioCtx.createGain();
@@ -18,8 +23,12 @@ masterVolume.connect(audioCtx.destination);
 
 let getReelItem = () => {
   let newReel = document.createElement("div");
-  newReel.innerHTML =
-    reelContents[Math.floor(Math.random() * reelContents.length)];
+  if (pityTriggered && pityCombo) {
+    newReel.innerHTML = pityCombo.symbol;
+  } else {
+    newReel.innerHTML =
+      reelContents[Math.floor(Math.random() * reelContents.length)];
+  }
   newReel.classList.add("reel-item");
   setTimeout(() => {
     newReel.classList.add("active");
@@ -35,6 +44,20 @@ let startSpin = () => {
     });
     updateMoney(-1);
     setChange(-1);
+    
+    if (currentPity <= 0 && !pityTriggered) {
+      pityTriggered = true;
+      let isDouble = Math.random() < 0.8;
+      let symbol = reelContents[Math.floor(Math.random() * reelContents.length)];
+      pityCombo = {
+        symbol: symbol,
+        isDouble: isDouble
+      };
+    } else {
+      currentPity--;
+      updatePityDisplay();
+    }
+    
     spinningReels.push(0);
     setTimeout(() => {
       spinningReels.push(1);
@@ -87,6 +110,16 @@ let updateMoney = change => {
   document.querySelector("#money").innerText = money;
 };
 
+let updatePityDisplay = () => {
+  let pityEl = document.querySelector("#pity-count");
+  if (!pityEl) {
+    pityEl = document.createElement("div");
+    pityEl.id = "pity-count";
+    document.body.prepend(pityEl);
+  }
+  pityEl.innerText = `保底: ${currentPity}`;
+};
+
 let setChange = change => {
   let changes = document.querySelector(".changes");
   let newChange = document.createElement("div");
@@ -109,6 +142,19 @@ let playWinChime = amount => {
 };
 
 let findWins = () => {
+  if (pityTriggered && pityCombo) {
+    if (pityCombo.isDouble) {
+      win(2, pityCombo.symbol);
+    } else {
+      win(3, pityCombo.symbol);
+    }
+    pityTriggered = false;
+    pityCombo = null;
+    currentPity = pityCount;
+    updatePityDisplay();
+    return;
+  }
+  
   let winline = [];
   let symbols = {};
   reelContainers.forEach(reel => {
@@ -208,3 +254,5 @@ reelContents.forEach((symbol, index) => {
     "triples"
   );
 });
+
+updatePityDisplay();
