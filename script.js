@@ -30,6 +30,13 @@ let getReelItem = () => {
 
 let startSpin = () => {
   if (!spinning && money > 0) {
+    if (audioCtx.currentTime > 300) {
+      audioCtx.close();
+      audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+      masterVolume = audioCtx.createGain();
+      masterVolume.gain.setValueAtTime(0.05, audioCtx.currentTime);
+      masterVolume.connect(audioCtx.destination);
+    }
     document.querySelectorAll(".prize-item.active").forEach(s => {
       s.classList.remove("active");
     });
