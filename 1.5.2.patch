@@ -1,0 +1,144 @@
+diff --git a/script.js b/script.js
+index 1686d03..5aa6080 100755
+--- a/script.js
++++ b/script.js
+@@ -7,6 +7,10 @@ let spinningReels = [];
+ let spinning = false;
+ let reelDelay = 100;
+ 
++let spinsWithoutWin = 0;
++let forcedWinSymbols = [null, null, null];
++let reelMoveCounts = [0, 0, 0];
++
+ let money = 100;
+ let moneyToAdd = 0;
+ 
+@@ -16,10 +20,15 @@ let masterVolume = audioCtx.createGain();
+ masterVolume.gain.setValueAtTime(0.05, audioCtx.currentTime);
+ masterVolume.connect(audioCtx.destination);
+ 
+-let getReelItem = () => {
++let getReelItem = (reelIndex) => {
+   let newReel = document.createElement("div");
+-  newReel.innerHTML =
+-    reelContents[Math.floor(Math.random() * reelContents.length)];
++  let symbol = reelContents[Math.floor(Math.random() * reelContents.length)];
++  
++  if (reelIndex !== undefined && reelMoveCounts[reelIndex] === 7 && forcedWinSymbols[reelIndex] !== null) {
++      symbol = forcedWinSymbols[reelIndex];
++  }
++
++  newReel.innerHTML = symbol;
+   newReel.classList.add("reel-item");
+   setTimeout(() => {
+     newReel.classList.add("active");
+@@ -35,6 +44,30 @@ let startSpin = () => {
+     });
+     updateMoney(-1);
+     setChange(-1);
++    
++    reelMoveCounts = [0, 0, 0];
++    forcedWinSymbols = [null, null, null];
++    
++    if (spinsWithoutWin >= 30) {
++        let winSymbol = reelContents[Math.floor(Math.random() * reelContents.length)];
++        let isTriple = Math.random() < 0.20;
++        
++        if (isTriple) {
++            forcedWinSymbols = [winSymbol, winSymbol, winSymbol];
++        } else {
++            let differentSymbols = reelContents.filter(s => s !== winSymbol);
++            let diffSymbol = differentSymbols[Math.floor(Math.random() * differentSymbols.length)];
++            let diffReelIndex = Math.floor(Math.random() * 3);
++            for (let i = 0; i < 3; i++) {
++                if (i === diffReelIndex) {
++                    forcedWinSymbols[i] = diffSymbol;
++                } else {
++                    forcedWinSymbols[i] = winSymbol;
++                }
++            }
++        }
++    }
++    
+     spinningReels.push(0);
+     setTimeout(() => {
+       spinningReels.push(1);
+@@ -72,8 +105,9 @@ let spinUpdate = spinsLeft => {
+ };
+ 
+ let moveReel = reelIndex => {
++  if (reelIndex !== undefined) reelMoveCounts[reelIndex]++;
+   let selectedReel = reelContainers[reelIndex];
+-  selectedReel.prepend(getReelItem());
++  selectedReel.prepend(getReelItem(reelIndex));
+   if (selectedReel.children.length > reelLength) {
+     selectedReel.lastElementChild.classList.add("deactivate");
+     setTimeout(() => {
+@@ -118,6 +152,8 @@ let findWins = () => {
+     else symbols[symbol] = 1;
+   });
+ 
++  let won = false;
++
+   if (
+     winline.filter(s => {
+       return s === winline[0];
+@@ -127,16 +163,25 @@ let findWins = () => {
+     document
+       .querySelector(".triples")
+       .children[reelContents.indexOf(winline[0])].classList.add("active");
++    won = true;
+   } else {
+-    for (s in symbols) {
++    for (let s in symbols) {
+       if (symbols[s] == 2) {
+         win(2, s);
+         document
+           .querySelector(".doubles")
+           .children[reelContents.indexOf(s)].classList.add("active");
++        won = true;
+       }
+     }
+   }
++  
++  if (won) {
++      spinsWithoutWin = 0;
++  } else {
++      spinsWithoutWin++;
++  }
++  updatePityDisplay();
+ };
+ 
+ let win = (amountMatching, symbol) => {
+@@ -207,4 +252,28 @@ reelContents.forEach((symbol, index) => {
+     (index + 1) * 100,
+     "triples"
+   );
+-});
+\ No newline at end of file
++});
++
++let pityDisplay = document.createElement("div");
++pityDisplay.className = "pity-display";
++pityDisplay.style.textAlign = "center";
++pityDisplay.style.color = "#ff4081";
++pityDisplay.style.fontSize = "18px";
++pityDisplay.style.fontWeight = "bold";
++pityDisplay.style.margin = "15px 0";
++
++let playArea = document.querySelector(".play-area");
++if (playArea) {
++    playArea.parentNode.insertBefore(pityDisplay, playArea.nextSibling);
++}
++
++let updatePityDisplay = () => {
++    let spinsLeft = 30 - spinsWithoutWin;
++    if (spinsLeft <= 0) {
++        pityDisplay.innerHTML = "✨ <b>本次旋转必定中奖！</b> ✨";
++    } else {
++        pityDisplay.innerHTML = `距离触发保底还剩 <b>${spinsLeft}</b> 次`;
++    }
++};
++
++updatePityDisplay();
+\ No newline at end of file
